@@ -1,0 +1,11 @@
+The Hurtigbrief Python module.
+
+Author: Malte J. Ziebarth (mjz.science@fmvkb.de)
+
+Copyright (C) 2023 Malte J. Ziebarth
+
+The Hurtigbrief Python module is licensed under the GPL-3.0-or-later (see
+LICENSE file in this directory).
+
+The LaTeX template data files in the hurtigbrief/latex/templates/data/
+subdirectory are licensed under the LPPL-1.3c license.

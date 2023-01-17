@@ -1,0 +1,19 @@
+[project]
+name = "hurtigbrief"
+version = "0.1.0"
+description = "A letter-generating interface to LaTeX typesetting."
+readme = "README.md"
+license = {file = "LICENSE"}
+authors = [
+    {email = "mjz.science@fmvkb.de"},
+    {name = "Malte J. Ziebarth"}
+]
+maintainers = [
+    {name = "Malte J. Ziebarth", email = "mjz.science@fmvkb.de"}
+]
+
+#[tool.setuptools.packages.find]
+#where = ["hurtigbrief"]
+
+[tool.setuptools.package-data]
+"*" = ["*.tex"]

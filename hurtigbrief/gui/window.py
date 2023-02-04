@@ -109,9 +109,26 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         """
         Generates the letter from the current content.
         """
-        print("generate letter!")
-        return Letter(self.people[self.sender], self.people[self.destination],
-                      self.subject_buffer.get_text(),
-                      self.opening_buffer.get_text(),
-                      self.body_buffer.get_text(),
-                      self.closing_buffer.get_text())
+        sender = self.people[self.sender]
+        destination = self.people[self.destination]
+        subject = self.subject_buffer.get_text(
+            self.subject_buffer.get_start_iter(),
+            self.subject_buffer.get_end_iter(),
+            False
+        )
+        opening = self.opening_buffer.get_text(
+            self.opening_buffer.get_start_iter(),
+            self.opening_buffer.get_end_iter(),
+            False
+        )
+        body = self.body_buffer.get_text(
+            self.body_buffer.get_start_iter(),
+            self.body_buffer.get_end_iter(),
+            False
+        )
+        closing = self.closing_buffer.get_text(
+            self.closing_buffer.get_start_iter(),
+            self.closing_buffer.get_end_iter(),
+            False
+        )
+        return Letter(sender, destination, subject, opening, body, closing)

@@ -16,6 +16,7 @@
 
 from .gtk import Gtk
 from .window import HurtigbriefWindow
+from .scheduler import Scheduler
 from ..abstraction import Letter, Design
 from typing import Literal
 from hurtigbrief.latex.mklatex import do_latex

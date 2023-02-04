@@ -18,7 +18,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from .address import Address
-from typing import Optional
+from typing import Optional, List
 
 
 class Person:
@@ -48,3 +48,18 @@ class Person:
         Compose an address.
         """
         return "\\\\".join([self.name] + self.address.compose())
+
+
+    @staticmethod
+    def from_json(json: dict, address_list: List[Address]) -> "Person":
+        """
+        Load this person from a saved JSON.
+        """
+        aid = int(json["address"])
+        if aid < 0 or aid > len(address_list):
+            raise RuntimeError("JSON for a person is corrupted: found "
+                               "address id " + str(aid) + " which is out of "
+                               "bounds for an address list of length "
+                               + str(len(address_list)) + ".")
+        return Person(json["name"], address_list[aid], json["email"],
+                      json["phone"])

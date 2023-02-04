@@ -39,6 +39,14 @@ class Address:
         raise NotImplementedError("Address compose not implemented for address "
                                   "of type " + str(type(self)))
 
+    def to_json(self) -> dict:
+        return {
+            "street" : self.street,
+            "number" : self.number,
+            "postalcode" : self.postalcode,
+            "city"   : self.city
+        }
+
 
 class GermanAddress(Address):
     """
@@ -78,3 +86,38 @@ class GermanAddress(Address):
             return strasse[:-4] + "."
 
         return strasse
+
+    def to_json(self) -> dict:
+        """
+        Return a JSON element for saving this address.
+        """
+        json = super().to_json()
+        if self.plz_only:
+            del json["street"]
+            del json["number"]
+        return json
+
+
+def address_from_json(json: dict) -> Address:
+    """
+    Generate an address from a JSON entry of the GUI.
+    """
+    country = json["country"]
+    city = json["city"]
+    postalcode = json["postalcode"]
+    if country == "Germany":
+        if "street" in json:
+            plz_only = False
+            street = json["street"]
+            if "number" in json:
+                number = json["number"]
+            else:
+                number = ""
+        else:
+            plz_only = True
+            number = None
+            street = None
+
+        return GermanAddress(street, number, postalcode, city)
+
+    raise NotImplementedError("Only 'GermanAddress' implemented so far.")

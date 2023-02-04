@@ -12,8 +12,8 @@ maintainers = [
     {name = "Malte J. Ziebarth", email = "mjz.science@fmvkb.de"}
 ]
 
-#[tool.setuptools.packages.find]
-#where = ["hurtigbrief"]
+[tool.setuptools.packages.find]
+where = ["."]
 
 [tool.setuptools.package-data]
 "*" = ["*.tex"]

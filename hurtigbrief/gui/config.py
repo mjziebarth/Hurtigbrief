@@ -17,16 +17,43 @@ import json
 
 # The default configuration:
 default = {
-    'closing' : 'Mit freundlichen Grüßen',
-    'opening' : 'Moin moin',
-    'addresses' : [
+    "closing" : "Mit freundlichen Grüßen",
+    "opening" : "Moin moin",
+    "default_sender" : 0,
+    #
+    # Addresses:
+    #
+    "addresses" : [
         {
-            'country'    : 'Germany',
-            'street'     : 'Panoramastraße',
-            'number'     : '1A',
-            'postalcode' : 10178,
-            'city'       : 'Berlin'
+            "country"    : "Germany",
+            "street"     : "Panoramastraße",
+            "number"     : "1A",
+            "postalcode" : 10178,
+            "city"       : "Berlin"
         },
+        {
+            "country"    : "Germany",
+            "street"     : "Alte Post",
+            "number"     : "4",
+            "postalcode" : 18055,
+            "city"       : "Rostock"
+        }
     ],
-    'people'  : []
+    #
+    # People:
+    #
+    'people'  : [
+        {
+            'name'    : 'Zure Laki',
+            'address' : 0,
+            'email'   : 'muster@keinegueltigeemail.de',
+            'phone'   : '(0)30 23125837',
+        },
+        {
+            'name'    : 'Max Muster',
+            'address' : 1,
+            'email'   : 'muster@keinegueltigeemail.de',
+            'phone'   : '(0)40 66969092',
+        },
+    ]
 }

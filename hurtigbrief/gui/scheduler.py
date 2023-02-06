@@ -42,7 +42,7 @@ class Scheduler:
         #
         # González, N., Calot, E. P., Ierache, J. S., Hasperué, W.: On the shape
         # of timings distributions in free-text keystroke dynamics profiles
-        return sum(keystroke_times) / len(keystroke_times)
+        return sum(self.keystroke_times) / len(self.keystroke_times)
 
     def register_keystroke_waiting_time(self, T: float):
         """

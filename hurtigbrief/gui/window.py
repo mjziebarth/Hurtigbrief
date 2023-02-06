@@ -13,11 +13,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from .gtk import Gtk, GtkSource, EvinceView
+from .gtk import Gtk, GtkSource, EvinceView, GObject
 from .config import default
+from .types import TemplateName
 from ..abstraction.address import address_from_json
 from ..abstraction.person import Person
 from ..abstraction.letter import Letter
+from ..abstraction.design import Design
 from typing import Optional
 
 class HurtigbriefWindow(Gtk.ApplicationWindow):
@@ -25,6 +27,11 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
     The window.
     """
     default_sender: Optional[int]
+
+    __gsignals__ = {
+        "letter_changed" : (GObject.SIGNAL_RUN_FIRST, None,
+                            (object, object, object))
+    }
 
     def __init__(self, application=None):
         super().__init__(application=application)
@@ -131,4 +138,7 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
             self.closing_buffer.get_end_iter(),
             False
         )
-        return Letter(sender, destination, subject, opening, body, closing)
+        self.emit("letter_changed",
+                  Letter(sender, destination, subject, opening, body, closing),
+                  Design(),
+                  "scrletter")

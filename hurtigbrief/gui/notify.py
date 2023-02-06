@@ -1,4 +1,8 @@
-# Bundled GTK imports using GObject
+# Notification from finished threads.
+#
+# Author: Malte J. Ziebarth (mjz.science@fmvkb.de)
+#
+# Copyright (C) 2023 Malte J. Ziebarth
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,8 +17,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import gi
-gi.require_version("Gtk", "3.0")
-gi.require_version("GtkSource", "4")
-gi.require_version("EvinceView", "3.0")
-from gi.repository import Gtk, GtkSource, EvinceView, GObject
+from .gtk import GObject
+
+class Notify(GObject.GObject):
+    """
+    A class to notify, from a different Python thread, the main
+    application about the completion and result of a task.
+    """
+    __gsignals__ = {
+        "notify_result" : (GObject.SIGNAL_RUN_FIRST, None, (object,))
+    }
+
+    def __init__(self):
+        super().__init__()
+
+    def emit_result(self, result):
+        self.emit("notify_result", result)

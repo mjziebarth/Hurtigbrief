@@ -1,5 +1,9 @@
 # Compute scheduling intervals.
 #
+# Author: Malte J. Ziebarth (mjz.science@fmvkb.de)
+#
+# Copyright (C) 2023 Malte J. Ziebarth
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or

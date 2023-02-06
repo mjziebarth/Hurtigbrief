@@ -17,11 +17,11 @@
 from .gtk import Gtk
 from .window import HurtigbriefWindow
 from .scheduler import Scheduler
+from .types import TemplateName
+from .manager import TaskManager
 from ..abstraction import Letter, Design
-from typing import Literal
-from hurtigbrief.latex.mklatex import do_latex
-from hurtigbrief.latex.workspace import Workspace
-from hurtigbrief.latex.preamblecache import PreambleCache
+from ..latex.workspace import Workspace
+from ..latex.preamblecache import PreambleCache
 
 class HurtigbriefApp(Gtk.Application):
     """
@@ -33,15 +33,18 @@ class HurtigbriefApp(Gtk.Application):
         print("finished initialization!")
         self.workspace = Workspace()
         self.preamble_cache = PreambleCache(self.workspace)
+        self.task_manager = TaskManager(self.workspace, self.preamble_cache)
+        self.scheduler = Scheduler()
 
     def on_activate(self):
-        win = HurtigbriefWindow(application=self)
-        win.present()
+        self.window = HurtigbriefWindow(application=self)
+        self.window.connect("letter_changed", self.on_letter_changed)
+        self.window.present()
 
-    def on_letter_changed(self, letter: Letter, design: Design,
-                          template: Literal["scrletter"]):
+    def on_letter_changed(self, window: HurtigbriefWindow, letter: Letter,
+                          design: Design, template: TemplateName):
         """
         This method compiles the letter.
         """
-        do_latex(letter, design, "scrletter", self.workspace,
-                 self.preamble_cache)
+        delay_seconds =  self.scheduler.propose_delay()
+        self.task_manager.submit(delay_seconds, letter, design, template)

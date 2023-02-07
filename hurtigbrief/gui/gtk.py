@@ -21,4 +21,9 @@ import gi
 gi.require_version("Gtk", "3.0")
 gi.require_version("GtkSource", "4")
 gi.require_version("EvinceView", "3.0")
-from gi.repository import Gtk, GtkSource, EvinceView, GObject
+from gi.repository import Gtk, GtkSource, EvinceView, GObject, EvinceDocument
+
+#
+# Initialize EvinceDocument:
+#
+EvinceDocument.init()

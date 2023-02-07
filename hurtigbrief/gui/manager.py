@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from .task import LatexTask
+from .task import LatexTask, TaskResult
 from .gtk import GObject
 from .types import TemplateName
 from .notify import Notify
@@ -33,7 +33,12 @@ class TaskManager(GObject.GObject):
     """
     task: Optional[LatexTask]
 
+    __gsignals__ = {
+        "notify_result" : (GObject.SIGNAL_RUN_FIRST, None, (object,))
+    }
+
     def __init__(self, workspace: Workspace, preamble_cache: PreambleCache):
+        super().__init__()
         self.task = None
         self.workspace = workspace
         self.preamble_cache = preamble_cache
@@ -72,7 +77,7 @@ class TaskManager(GObject.GObject):
         self.task = job
         job.start()
 
-    def receive_result(self, notification: Notify, result: object):
+    def receive_result(self, notification: Notify, result: TaskResult):
         """
         Receive the results of a task.
         """
@@ -80,3 +85,4 @@ class TaskManager(GObject.GObject):
         print("result:")
         print(result)
         self.task = None
+        self.emit("notify_result", result)

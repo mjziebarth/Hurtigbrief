@@ -23,6 +23,7 @@ from .window import HurtigbriefWindow
 from .scheduler import Scheduler
 from .types import TemplateName
 from .manager import TaskManager
+from .task import TaskResult
 from ..abstraction import Letter, Design
 from ..latex.workspace import Workspace
 from ..latex.preamblecache import PreambleCache
@@ -38,7 +39,9 @@ class HurtigbriefApp(Gtk.Application):
         self.workspace = Workspace()
         self.preamble_cache = PreambleCache(self.workspace)
         self.task_manager = TaskManager(self.workspace, self.preamble_cache)
+        self.task_manager.connect("notify_result", self.on_receive_result)
         self.scheduler = Scheduler()
+        self.document = None
 
     def on_activate(self):
         self.window = HurtigbriefWindow(application=self)
@@ -52,3 +55,9 @@ class HurtigbriefApp(Gtk.Application):
         """
         delay_seconds =  self.scheduler.propose_delay()
         self.task_manager.submit(delay_seconds, letter, design, template)
+
+    def on_receive_result(self, manager: TaskManager, result: TaskResult):
+        """
+        Receive the result of a latex compilation.
+        """
+        self.window.on_receive_result(result)

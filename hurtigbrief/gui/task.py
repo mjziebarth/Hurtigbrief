@@ -26,6 +26,20 @@ from .types import TemplateName
 from .gtk import GObject
 from .notify import Notify
 from threading import Thread
+from pathlib import Path
+
+class TaskResult:
+    """
+    Result of a LaTeX task.
+    """
+    document_path: str
+
+    def __init__(self, document_path: str):
+        self.document_path = str(document_path)
+
+    def __repr__(self) -> str:
+        return "TaskResult('" + self.document_path + "')"
+
 
 class LatexTask(Thread):
     """
@@ -44,4 +58,6 @@ class LatexTask(Thread):
     def run(self):
         do_latex(self.letter, self.design, self.template, self.workspace,
                  self.preamble_cache)
-        self.notify.emit_result("The result")
+        fullpath = str((Path('.') / "letter.pdf").resolve())
+        uri = "file://" + fullpath
+        self.notify.emit_result(TaskResult(uri))

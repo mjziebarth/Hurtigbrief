@@ -33,7 +33,8 @@ from .config import latex_cmd
 Template = Literal["scrletter"]
 
 def do_latex(letter: Letter, design: Design, template: Template,
-             workspace: Workspace, preamble_cache: PreambleCache):
+             workspace: Workspace, preamble_cache: PreambleCache,
+             output_to_workspace: bool = False):
     # Depending on the template, generate the latex file:
     if template == "scrletter":
         preamble, document = create_scr_letter(letter, design)
@@ -61,5 +62,6 @@ def do_latex(letter: Letter, design: Design, template: Template,
         raise RuntimeError("Compiling the LaTeX document failed.")
 
     # Move the file:
-    move(tmp_out, Path(".")/"letter.pdf")
+    if not output_to_workspace:
+        move(tmp_out, Path(".")/"letter.pdf")
 

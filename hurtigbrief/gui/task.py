@@ -57,7 +57,8 @@ class LatexTask(Thread):
 
     def run(self):
         do_latex(self.letter, self.design, self.template, self.workspace,
-                 self.preamble_cache)
-        fullpath = str((Path('.') / "letter.pdf").resolve())
+                 self.preamble_cache, output_to_workspace=True)
+        fullpath = str((Path(self.workspace.directory.name)
+                        / "letter.pdf").resolve())
         uri = "file://" + fullpath
         self.notify.emit_result(TaskResult(uri))

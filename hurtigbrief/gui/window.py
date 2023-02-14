@@ -165,4 +165,5 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
             self.pdf_document_model.set_document(self.document)
             self.document_path = result.document_path
         else:
+            self.document.load(self.document_path)
             self.pdf_view.reload()

@@ -27,6 +27,7 @@ from .task import TaskResult
 from ..abstraction import Letter, Design
 from ..latex.workspace import Workspace
 from ..latex.preamblecache import PreambleCache
+from datetime import datetime
 
 class HurtigbriefApp(Gtk.Application):
     """
@@ -42,6 +43,8 @@ class HurtigbriefApp(Gtk.Application):
         self.task_manager.connect("notify_result", self.on_receive_result)
         self.scheduler = Scheduler()
         self.document = None
+        # Measure the time since the last document change:
+        self.lastchange = None
 
     def on_activate(self):
         self.window = HurtigbriefWindow(application=self)
@@ -53,6 +56,12 @@ class HurtigbriefApp(Gtk.Application):
         """
         This method compiles the letter.
         """
+        # Measure the time since the last change:
+        now = datetime.now()
+        if self.lastchange is not None:
+            dt = (now - self.lastchange).total_seconds()
+            self.scheduler.register_keystroke_waiting_time(dt)
+        self.lastchange = now
         delay_seconds =  self.scheduler.propose_delay()
         self.task_manager.submit(delay_seconds, letter, design, template)
 

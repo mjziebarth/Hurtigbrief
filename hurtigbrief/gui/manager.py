@@ -26,6 +26,41 @@ from ..latex.workspace import Workspace
 from ..latex.preamblecache import PreambleCache
 from typing import Optional
 from warnings import warn
+from threading import Thread
+from queue import Queue
+
+class TaskLoop(Thread):
+    """
+    A loop that receives jobs and starts latex tasks one at a time.
+    """
+    def __init__(self, queue: Queue, manager: "TaskManager",
+                 workspace: Workspace, preamble_cache: PreambleCache):
+        # Set it as a daemon thread:
+        super().__init__(daemon=True)
+        self.notify = Notify()
+        self.queue = queue
+        self.manager = manager
+        self.workspace = workspace
+        self.preamble_cache = preamble_cache
+
+    def run(self):
+        while True:
+            # Get a new job, the most recent entry in the job queue:
+            letter, design, template = self.queue.get()
+            while not self.queue.empty():
+                self.queue.task_done()
+                letter, design, template = self.queue.get()
+
+            # Start a new task and wait for it to finish:
+            job = LatexTask(letter, design, template, self.workspace,
+                            self.preamble_cache)
+            job.notify.connect("notify_result", self.manager.receive_result)
+            job.start()
+            job.join()
+
+            # Finish that task.
+            self.queue.task_done()
+
 
 class TaskManager(GObject.GObject):
     """
@@ -42,40 +77,16 @@ class TaskManager(GObject.GObject):
         self.task = None
         self.workspace = workspace
         self.preamble_cache = preamble_cache
+        self.queue = Queue()
+        self.task_loop = TaskLoop(self.queue, self, workspace, preamble_cache)
+        self.task_loop.start()
 
     def submit(self, delay: float, letter: Letter, design: Design,
                template: TemplateName):
         """
         Submit a job for execution.
         """
-        if self.task:
-            # TODO FIXME!
-            # Another task has been submitted while the old one is still
-            # running. We cannot start another task on the same workspace
-            # since LaTeX will overwrite the auxiliary files, and it seems
-            # questionable whether we should create concurrent workspaces.
-            # So, we should do one of two things:
-            # 1) kill the old task and start the new one
-            # 2) submit the new task to a job queue (possibly overwriting
-            #    an existing submitted-but-not-started job) and run the
-            #    new job as soon as the old one is done.
-            #
-            # Option 2) seems to be the better one. For this, we need a
-            # background demon thread that starts the latex tasks,
-            # waits for them to finish, sleeps, and wakes up again
-            # once another task is submitted.
-            # A new thread is required not to block the GUI loop while
-            # waiting for the old task to finished (as it is currently
-            # done in the lines below):
-            warn("Waiting for an unfinished task. This should be handled "
-                 "differently!")
-            self.task.join()
-
-        job = LatexTask(letter, design, template, self.workspace,
-                        self.preamble_cache)
-        job.notify.connect("notify_result", self.receive_result)
-        self.task = job
-        job.start()
+        self.queue.put((letter, design, template))
 
     def receive_result(self, notification: Notify, result: TaskResult):
         """

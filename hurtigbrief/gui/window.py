@@ -147,7 +147,6 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
             self.body_buffer.get_end_iter(),
             False
         )
-        print("body:",body)
         closing = self.closing_buffer.get_text(
             self.closing_buffer.get_start_iter(),
             self.closing_buffer.get_end_iter(),

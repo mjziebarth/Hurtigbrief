@@ -54,4 +54,6 @@ class Scheduler:
         """
         self.keystroke_times[self.kt_id] = T
         self.kt_id += 1
+        if self.kt_id >= len(self.keystroke_times):
+            self.kt_id = 0
 

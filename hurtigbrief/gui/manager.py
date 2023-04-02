@@ -92,8 +92,5 @@ class TaskManager(GObject.GObject):
         """
         Receive the results of a task.
         """
-        print("received result!")
-        print("result:")
-        print(result)
         self.task = None
         self.emit("notify_result", result)

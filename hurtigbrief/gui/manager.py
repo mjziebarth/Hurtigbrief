@@ -24,9 +24,9 @@ from .notify import Notify
 from ..abstraction import Letter, Design
 from ..latex.workspace import Workspace
 from ..latex.preamblecache import PreambleCache
-from typing import Optional
+from typing import Optional, Tuple
 from warnings import warn
-from threading import Thread
+from threading import Thread, Timer
 from queue import Queue
 
 class TaskLoop(Thread):
@@ -80,13 +80,26 @@ class TaskManager(GObject.GObject):
         self.queue = Queue()
         self.task_loop = TaskLoop(self.queue, self, workspace, preamble_cache)
         self.task_loop.start()
+        self.timer = None
 
     def submit(self, delay: float, letter: Letter, design: Design,
                template: TemplateName):
         """
         Submit a job for execution.
         """
-        self.queue.put((letter, design, template))
+        # A later-executed job submission:
+        def submission():
+            self.start((letter, design, template))
+        if self.timer is not None:
+            self.timer.cancel()
+        self.timer = Timer(delay, submission)
+        self.timer.start()
+
+    def start(self, job: Tuple[Letter, Design, TemplateName]):
+        """
+        Start a job.
+        """
+        self.queue.put(job)
 
     def receive_result(self, notification: Notify, result: TaskResult):
         """

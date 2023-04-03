@@ -126,6 +126,15 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
 
         layout_left.set_row_spacing(max(round(0.2*font_height), 1))
 
+        # Set a DPI-aware size request:
+        layout.set_size_request(round(font_height * 80),
+                                round(font_height * 40))
+        layout_left.set_size_request(round(font_height * 35),
+                                     round(font_height * 40))
+        evscroll.set_size_request(round(font_height * 45),
+                                  round(font_height * 40))
+
+
     def generate_letter(self):
         """
         Generates the letter from the current content.

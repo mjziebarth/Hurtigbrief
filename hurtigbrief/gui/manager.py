@@ -28,6 +28,7 @@ from typing import Optional, Tuple
 from warnings import warn
 from threading import Thread, Timer
 from queue import Queue
+from datetime import datetime
 
 class TaskLoop(Thread):
     """
@@ -55,11 +56,14 @@ class TaskLoop(Thread):
             job = LatexTask(letter, design, template, self.workspace,
                             self.preamble_cache)
             job.notify.connect("notify_result", self.manager.receive_result)
+            t0 = datetime.now()
             job.start()
             job.join()
+            t1 = datetime.now()
 
             # Finish that task.
             self.queue.task_done()
+            self.notify.emit("notify_compile_time", (t1-t0).total_seconds())
 
 
 class TaskManager(GObject.GObject):
@@ -69,7 +73,8 @@ class TaskManager(GObject.GObject):
     task: Optional[LatexTask]
 
     __gsignals__ = {
-        "notify_result" : (GObject.SIGNAL_RUN_FIRST, None, (object,))
+        "notify_result" : (GObject.SIGNAL_RUN_FIRST, None, (object,)),
+        "notify_compile_time" : (GObject.SIGNAL_RUN_FIRST, None, (object,))
     }
 
     def __init__(self, workspace: Workspace, preamble_cache: PreambleCache):
@@ -107,3 +112,10 @@ class TaskManager(GObject.GObject):
         """
         self.task = None
         self.emit("notify_result", result)
+
+    def receive_compile_time(self, compile_time: float):
+        """
+        Receive the runtime of the LaTeX compilation in seconds.
+        """
+        self.emit("notify_compile_time", compile_time)
+

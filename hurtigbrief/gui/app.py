@@ -41,6 +41,8 @@ class HurtigbriefApp(Gtk.Application):
         self.preamble_cache = PreambleCache(self.workspace)
         self.task_manager = TaskManager(self.workspace, self.preamble_cache)
         self.task_manager.connect("notify_result", self.on_receive_result)
+        self.task_manager.connect("notify_compile_time",
+                                  self.on_receive_compile_time)
         self.scheduler = Scheduler()
         self.document = None
         # Measure the time since the last document change:
@@ -70,3 +72,9 @@ class HurtigbriefApp(Gtk.Application):
         Receive the result of a latex compilation.
         """
         self.window.on_receive_result(result)
+
+    def on_receive_compile_time(self, compile_time: float):
+        """
+        Receive the runtime of the LaTeX compilation in seconds.
+        """
+        self.scheduler.register_compile_time(compile_time)

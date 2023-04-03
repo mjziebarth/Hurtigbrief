@@ -25,7 +25,8 @@ class Notify(GObject.GObject):
     application about the completion and result of a task.
     """
     __gsignals__ = {
-        "notify_result" : (GObject.SIGNAL_RUN_FIRST, None, (object,))
+        "notify_result" : (GObject.SIGNAL_RUN_FIRST, None, (object,)),
+        "notify_compile_time" : (GObject.SIGNAL_RUN_FIRST, None, (object,))
     }
 
     def __init__(self):
@@ -33,3 +34,6 @@ class Notify(GObject.GObject):
 
     def emit_result(self, result):
         self.emit("notify_result", result)
+
+    def emit_compile_time(self, compile_time: float):
+        self.emit("notify_compile_time", compile_time)

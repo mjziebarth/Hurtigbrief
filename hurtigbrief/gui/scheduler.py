@@ -29,9 +29,9 @@ class Scheduler:
     kt_id: int
 
     def __init__(self):
-        self.compile_times = [0.0] * 10
+        self.compile_times = []
         self.ct_id = 0
-        self.keystroke_times = [0.0] * 1000
+        self.keystroke_times = []
         self.kt_id = 0
 
     def propose_delay(self) -> float:
@@ -46,15 +46,39 @@ class Scheduler:
         #
         # González, N., Calot, E. P., Ierache, J. S., Hasperué, W.: On the shape
         # of timings distributions in free-text keystroke dynamics profiles
-        return max(1.5 * sum(self.keystroke_times) / len(self.keystroke_times),
-                   sum(self.compile_times) / len(self.compile_times))
+        if len(self.keystroke_times) == 0:
+            keystroke_time = 0.0
+        else:
+            keystroke_time = 1.5 * sum(self.keystroke_times) \
+                                   / len(self.keystroke_times)
+        # Compile times:
+        if len(self.compile_times) == 0:
+            compile_time = 0.0
+        else:
+            compile_time = sum(self.compile_times) / len(self.compile_times)
+        # Chosen waiting time with a margin:
+        return 1.5 * max(keystroke_time, compile_time)
 
     def register_keystroke_waiting_time(self, T: float):
         """
         Register the waiting time between two keystrokes.
         """
-        self.keystroke_times[self.kt_id] = T
+        if len(self.keystroke_times) < 1000:
+            self.keystroke_times.append(T)
+        else:
+            self.keystroke_times[self.kt_id] = T
         self.kt_id += 1
         if self.kt_id >= len(self.keystroke_times):
             self.kt_id = 0
 
+    def register_compile_time(self, T: float):
+        """
+        Register a LaTeX compile time.
+        """
+        if len(self.compile_times) < 10:
+            self.compile_times.append(T)
+        else:
+            self.compile_times[self.ct_id] = T
+        self.ct_id += 1
+        if self.ct_id >= len(self.compile_times):
+            self.ct_id = 0

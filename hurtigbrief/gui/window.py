@@ -40,6 +40,7 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
 
     def __init__(self, application=None):
         super().__init__(application=application)
+        self.set_title("Hurtigbrief")
 
         # Some variables:
         self.addresses = [address_from_json(json)

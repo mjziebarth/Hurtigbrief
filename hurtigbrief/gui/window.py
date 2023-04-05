@@ -63,7 +63,7 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
 
         # Layout
         layout = Gtk.HPaned()
-        layout_left = Gtk.Grid()
+        layout_left = Gtk.Grid(column_homogeneous=False)
         layout.add1(layout_left)
 
         # The addresses:
@@ -87,6 +87,21 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         self.cb_destination.add_attribute(renderer, 'text', 0)
         layout_left.attach(self.cb_destination, 1, 1, 1, 1)
 
+        # The address book:
+        address_button = Gtk.Button.new_from_icon_name(
+            "contact-new",
+            Gtk.IconSize.BUTTON
+        )
+        layout_left.attach(address_button, 2, 0, 1, 2)
+        address_button.set_halign(Gtk.Align.START)
+        address_button.set_valign(Gtk.Align.CENTER)
+        address_button.connect("clicked", self.show_address_dialog)
+
+        # Eat space:
+        space_eater = Gtk.Label("")
+        layout_left.attach(space_eater, 3, 0, 1, 2)
+        space_eater.set_hexpand(True)
+
         # The subject:
         try:
             languages = GtkSource.LanguageManager()
@@ -96,14 +111,14 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         self.subject_buffer = GtkSource.Buffer(language=language)
         self.subject_buffer.connect('changed', self.on_letter_changed)
         self.subject_edit = GtkSource.View(buffer=self.subject_buffer)
-        layout_left.attach(self.subject_edit, 0, 2, 2, 1)
+        layout_left.attach(self.subject_edit, 0, 2, 4, 1)
 
         # The opening:
         self.opening_buffer = GtkSource.Buffer(language=language)
         self.opening_buffer.set_text(default['opening'])
         self.opening_buffer.connect('changed', self.on_letter_changed)
         self.opening_edit = GtkSource.View(buffer=self.opening_buffer)
-        layout_left.attach(self.opening_edit, 0, 3, 2, 1)
+        layout_left.attach(self.opening_edit, 0, 3, 4, 1)
 
         # The main body text source view:
         bodyscroll = Gtk.ScrolledWindow()
@@ -111,14 +126,14 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         self.body_buffer.connect('changed', self.on_letter_changed)
         self.body_edit = GtkSource.View(buffer=self.body_buffer, expand = True)
         bodyscroll.add(self.body_edit)
-        layout_left.attach(bodyscroll, 0, 4, 2, 1)
+        layout_left.attach(bodyscroll, 0, 4, 4, 1)
 
         # The closing:
         self.closing_buffer = GtkSource.Buffer(language=language)
         self.closing_buffer.set_text(default['closing'])
         self.closing_buffer.connect('changed', self.on_letter_changed)
         self.closing_edit = GtkSource.View(buffer=self.closing_buffer)
-        layout_left.attach(self.closing_edit, 0, 5, 2, 1)
+        layout_left.attach(self.closing_edit, 0, 5, 4, 1)
 
         # The PDF view:
         self.pdf_document_model = EvinceView.DocumentModel()
@@ -134,7 +149,7 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         progress_layout.pack_start(self.spinner, False, False, 0)
         self.spinner_label = Gtk.Label("", halign=Gtk.Align.START)
         progress_layout.pack_start(self.spinner_label, True, True, 0)
-        layout_left.attach(progress_layout, 0, 6, 3, 1)
+        layout_left.attach(progress_layout, 0, 6, 2, 1)
 
         self.add(layout)
 
@@ -147,6 +162,7 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         font_height = 0.5 * label_sender.get_allocated_height()
 
         layout_left.set_row_spacing(max(round(0.2*font_height), 1))
+        layout_left.set_column_spacing(max(round(0.2*font_height), 1))
 
         # Set a DPI-aware size request:
         layout.set_size_request(round(font_height * 80),
@@ -249,3 +265,9 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         else:
             self.document.load(self.document_path)
             self.pdf_view.reload()
+
+    def show_address_dialog(self, *args):
+        """
+        Shows a dialog to edit the address book.
+        """
+        print("show address book.")

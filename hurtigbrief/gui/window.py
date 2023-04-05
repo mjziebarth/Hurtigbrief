@@ -67,10 +67,25 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         layout.add1(layout_left)
 
         # The addresses:
+        self.name_model = self.generate_contact_list_model()
         label_sender = Gtk.Label('From:', halign=Gtk.Align.START)
         layout_left.attach(label_sender, 0, 0, 1, 1)
+        self.cb_sender = Gtk.ComboBox.new_with_model(self.name_model)
+        self.cb_sender.connect("changed", self.on_letter_changed)
+        renderer = Gtk.CellRendererText()
+        self.cb_sender.pack_start(renderer, True)
+        self.cb_sender.add_attribute(renderer, 'text', 0)
+        if self.sender is not None:
+            self.cb_sender.set_active(self.sender)
+        layout_left.attach(self.cb_sender, 1, 0, 1, 1)
         label_destination = Gtk.Label('To:', halign=Gtk.Align.START)
         layout_left.attach(label_destination, 0, 1, 1, 1)
+        self.cb_destination = Gtk.ComboBox.new_with_model(self.name_model)
+        self.cb_destination.connect("changed", self.on_letter_changed)
+        renderer = Gtk.CellRendererText()
+        self.cb_destination.pack_start(renderer, True)
+        self.cb_destination.add_attribute(renderer, 'text', 0)
+        layout_left.attach(self.cb_destination, 1, 1, 1, 1)
 
         # The subject:
         try:
@@ -123,7 +138,9 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
 
         # Get a hopefully DPI-aware height measure from the
         # drawn label:
-        font_height = label_sender.get_allocated_height()
+        # TODO: This label is actually resized to the ComboBox size.
+        # Use a label that is purely sized by the font size.
+        font_height = 0.5 * label_sender.get_allocated_height()
 
         layout_left.set_row_spacing(max(round(0.2*font_height), 1))
 
@@ -136,10 +153,22 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
                                   round(font_height * 40))
 
 
+    def generate_contact_list_model(self):
+        """
+        Generates a GtkListStore model from the list of addresses.
+        """
+        model = Gtk.ListStore(str)
+        for p in self.people:
+            model.append((p.name,))
+        return model
+
+
     def generate_letter(self):
         """
         Generates the letter from the current content.
         """
+        self.sender = self.cb_sender.get_active()
+        self.destination = self.cb_destination.get_active()
         sender = self.people[self.sender]
         destination = self.people[self.destination]
         subject = self.subject_buffer.get_text(

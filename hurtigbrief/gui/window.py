@@ -57,8 +57,8 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         self.document_path = None
         self.document = None
 
-        # TODO fixme!
-        self.destination = 1
+        # No default destination for a new letter.
+        self.destination = None
 
 
         # Layout
@@ -172,7 +172,15 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         Generates the letter from the current content.
         """
         self.sender = self.cb_sender.get_active()
+        if self.sender == -1:
+            self.sender = None
         self.destination = self.cb_destination.get_active()
+        if self.destination == -1:
+            self.destination = None
+        # Early exit if one of the people is not set:
+        if self.destination is None or self.sender is None:
+            return
+
         sender = self.people[self.sender]
         destination = self.people[self.destination]
         subject = self.subject_buffer.get_text(

@@ -47,9 +47,13 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
                           for json in default["addresses"]]
         self.people = [Person.from_json(json, self.addresses)
                        for json in default["people"]]
-        default_sender = int(default["default_sender"])
-        if default_sender >= 0 and default_sender < len(self.people):
-            self.sender = default_sender
+        default_sender = default["default_sender"]
+        if default_sender is not None:
+            default_sender = int(default_sender)
+            if default_sender >= 0 and default_sender < len(self.people):
+                self.sender = default_sender
+            else:
+                self.sender = None
         else:
             self.sender = None
         print("addresses:", self.addresses)

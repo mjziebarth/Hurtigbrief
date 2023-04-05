@@ -11,6 +11,10 @@ authors = [
 maintainers = [
     {name = "Malte J. Ziebarth", email = "mjz.science@fmvkb.de"}
 ]
+dependencies = [
+    "appdirs",
+    "pygobject"
+]
 
 [tool.setuptools.packages.find]
 where = ["."]

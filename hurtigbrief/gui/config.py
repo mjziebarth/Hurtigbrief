@@ -18,46 +18,42 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import json
+from os import mkdir
+from pathlib import Path
+from appdirs import user_config_dir
 
-# The default configuration:
-default = {
-    "closing" : "Mit freundlichen Grüßen",
-    "opening" : "Moin moin",
-    "default_sender" : 0,
-    #
-    # Addresses:
-    #
-    "addresses" : [
-        {
-            "country"    : "Germany",
-            "street"     : "Panoramastraße",
-            "number"     : "1A",
-            "postalcode" : 10178,
-            "city"       : "Berlin"
-        },
-        {
-            "country"    : "Germany",
-            "street"     : "Alte Post",
-            "number"     : "4",
-            "postalcode" : 18055,
-            "city"       : "Rostock"
-        }
-    ],
-    #
-    # People:
-    #
-    'people'  : [
-        {
-            'name'    : 'Zure Laki',
-            'address' : 0,
-            'email'   : 'muster@keinegueltigeemail.de',
-            'phone'   : '(0)30 23125837',
-        },
-        {
-            'name'    : 'Max Muster',
-            'address' : 1,
-            'email'   : 'muster@keinegueltigeemail.de',
-            'phone'   : '(0)40 66969092',
-        },
-    ]
-}
+# Get the configuration directory:
+confdir = user_config_dir("hurtigbrief","mjz")
+print("confdir:",confdir)
+confdir = Path(confdir)
+conffile = confdir / "hurtigbrief.conf"
+
+# Load the configuration file:
+try:
+    with open(conffile, "r") as f:
+        default = json.load(f)
+except FileNotFoundError:
+    # Config file does not yet exist.
+    # Default configuration:
+    default = {
+        "closing" : "Mit freundlichen Grüßen",
+        "opening" : "Sehr geehrte Damen und Herren",
+        "default_sender" : None,
+        #
+        # Addresses:
+        #
+        "addresses" : [
+        ],
+        #
+        # People:
+        #
+        "people"  : [
+        ]
+    }
+    if not confdir.is_dir():
+        mkdir(confdir)
+    with open(conffile, "w") as f:
+        json.dump(default, f)
+except:
+    raise RuntimeError("Configuration file " + str(conffile.absolute())
+                       + " cannot be loaded.")

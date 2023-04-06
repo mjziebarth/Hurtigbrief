@@ -21,11 +21,13 @@ from .gtk import Gtk, GtkSource, EvinceView, GObject, EvinceDocument
 from .config import default
 from .types import TemplateName
 from .task import TaskResult
+from .contacts import ContactsDialog
 from ..abstraction.address import address_from_json
 from ..abstraction.person import Person
 from ..abstraction.letter import Letter
 from ..abstraction.design import Design
 from typing import Optional
+
 
 class HurtigbriefWindow(Gtk.ApplicationWindow):
     """
@@ -274,4 +276,6 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         """
         Shows a dialog to edit the address book.
         """
-        print("show address book.")
+        dialog = ContactsDialog(self)
+        dialog.set_data(self.addresses, self.people)
+        dialog.run()

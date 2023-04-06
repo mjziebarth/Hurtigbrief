@@ -17,7 +17,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from .gtk import Gtk
+from .gtk import Gtk, GObject
 from ..abstraction.address import Address
 from ..abstraction.person import Person
 from typing import List
@@ -27,6 +27,14 @@ class ContactsDialog(Gtk.Dialog):
     """
     A dialog showing the contact information.
     """
+
+    __gsignals__ = {
+        "person_changed" : (GObject.SIGNAL_RUN_FIRST, None,
+                            (object,)),
+        "address_changed" : (GObject.SIGNAL_RUN_FIRST, None,
+                             (object,))
+    }
+
     def __init__(self, parent):
         super().__init__(title="Contacts", transient_for=parent)
         self.people_model = Gtk.ListStore(str, str, str, str)
@@ -79,15 +87,22 @@ class ContactsDialog(Gtk.Dialog):
         row = int(args[1])
         if row + 1 == self.people_model.iter_n_children():
             self.people_model.append(("","","",""))
+
+        it = self.people_model.get_iter(row)
+        self.people_model.set(it, 0, args[2])
+
+        self.emit("person_changed", row)
         print("Name edited:", args)
 
 
     def address_edited(self, *args):
-        # If the last, empty row is edited, add a new row:
         row = int(args[1])
+
+        # If the last, empty row is edited, add a new row:
         if row + 1 == self.people_model.iter_n_children():
             self.people_model.append(("","","",""))
 
+        self.emit("person_changed", row)
         print("Address edited:", args)
 
 
@@ -97,6 +112,10 @@ class ContactsDialog(Gtk.Dialog):
         if row + 1 == self.people_model.iter_n_children():
             self.people_model.append(("","","",""))
 
+        it = self.people_model.get_iter(row)
+        self.people_model.set(it, 2, args[2])
+
+        self.emit("person_changed", row)
         print("Email edited:", args)
 
 
@@ -106,6 +125,10 @@ class ContactsDialog(Gtk.Dialog):
         if row + 1 == self.people_model.iter_n_children():
             self.people_model.append(("","","",""))
 
+        it = self.people_model.get_iter(row)
+        self.people_model.set(it, 3, args[2])
+
+        self.emit("person_changed", row)
         print("Phone edited:", args)
 
 
@@ -123,4 +146,6 @@ class ContactsDialog(Gtk.Dialog):
             self.people_model.append((person.name, addr,
                                       person.email, person.phone))
         self.address_indices = address_indices
+
+        # Add the editable final row:
         self.people_model.append(("","","",""))

@@ -18,7 +18,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from .gtk import Gtk, GObject
-from ..abstraction.address import Address
+from ..abstraction.address import Address, GermanAddress
 from ..abstraction.person import Person
 from typing import List
 
@@ -30,13 +30,14 @@ class ContactsDialog(Gtk.Dialog):
 
     __gsignals__ = {
         "person_changed" : (GObject.SIGNAL_RUN_FIRST, None,
-                            (object,)),
-        "address_changed" : (GObject.SIGNAL_RUN_FIRST, None,
-                             (object,))
+                            (object,))
     }
 
-    def __init__(self, parent):
+    def __init__(self, parent, address_type=GermanAddress):
         super().__init__(title="Contacts", transient_for=parent)
+
+        self.address_type = address_type
+
         self.people_model = Gtk.ListStore(str, str, str, str)
         self.people_view = Gtk.TreeView(model=self.people_model,
                                         headers_visible=True)
@@ -82,54 +83,94 @@ class ContactsDialog(Gtk.Dialog):
         self.show_all()
 
 
-    def name_edited(self, *args):
-        # If the last, empty row is edited, add a new row:
-        row = int(args[1])
-        if row + 1 == self.people_model.iter_n_children():
-            self.people_model.append(("","","",""))
+    def update_person(self, row: int) -> bool:
+        """
+        Store the person at 'row'.
+        """
+        # Get the data saved in the row:
+        if row >= self.people_model.iter_n_children():
+            raise RuntimeError("Row out of bounds.")
 
         it = self.people_model.get_iter(row)
-        self.people_model.set(it, 0, args[2])
+        name_s = self.people_model.get(it, 0)[0]
+        addr_s = self.people_model.get(it, 1)[0]
+        email_s = self.people_model.get(it, 2)[0]
+        phone_s = self.people_model.get(it, 3)[0]
 
+        # Try to construct the address:
+        try:
+            address = self.address_type.parse_address(addr_s)
+        except:
+            # Return early (this person needs more editing before we allow
+            # its creation into the people list)
+            return False
+
+        # See if the address is known:
+        if address in self.a2i:
+            i = self.a2i[address]
+        else:
+            # Unknown, create new:
+            i = len(self.addresses)
+            self.addresses.append(address)
+            self.a2i[address] = i
+
+        # Create the new person:
+        p = Person(name_s, self.addresses[i], email_s, phone_s)
+        if row == len(self.people):
+            self.people.append(p)
+        else:
+            self.people[row] = p
+
+        return True
+
+
+    def edited(self, row, col, new_text):
+        """
+        General edited call.
+        """
+        is_new_row = row + 1 == self.people_model.iter_n_children()
+
+        # Update the model:
+        it = self.people_model.get_iter(row)
+        self.people_model.set(it, col, new_text)
+
+        # Update the person:
+        if not self.update_person(row):
+            # Edit did not lead to a valid person!
+            return
+
+        # If the last, empty row is edited, add a new row:
+        if is_new_row:
+            self.people_model.append(("","","",""))
+
+        # This person changed!
         self.emit("person_changed", row)
-        print("Name edited:", args)
+
+
+    def name_edited(self, *args):
+        row = int(args[1])
+        new_text = args[2]
+        self.edited(row, 0, new_text)
 
 
     def address_edited(self, *args):
         row = int(args[1])
-
-        # If the last, empty row is edited, add a new row:
-        if row + 1 == self.people_model.iter_n_children():
-            self.people_model.append(("","","",""))
-
-        self.emit("person_changed", row)
-        print("Address edited:", args)
+        new_text = args[2]
+        self.edited(row, 1, new_text)
 
 
     def email_edited(self, *args):
         # If the last, empty row is edited, add a new row:
         row = int(args[1])
-        if row + 1 == self.people_model.iter_n_children():
-            self.people_model.append(("","","",""))
-
-        it = self.people_model.get_iter(row)
-        self.people_model.set(it, 2, args[2])
-
-        self.emit("person_changed", row)
-        print("Email edited:", args)
+        new_text = args[2]
+        self.edited(row, 2, new_text)
 
 
     def phone_edited(self, *args):
         # If the last, empty row is edited, add a new row:
         row = int(args[1])
-        if row + 1 == self.people_model.iter_n_children():
-            self.people_model.append(("","","",""))
-
-        it = self.people_model.get_iter(row)
-        self.people_model.set(it, 3, args[2])
-
-        self.emit("person_changed", row)
-        print("Phone edited:", args)
+        new_text = args[2]
+        self.edited(row, 3, new_text)
 
 
     def set_data(self, addresses: List[Address], people: List[Person]):
@@ -139,13 +180,15 @@ class ContactsDialog(Gtk.Dialog):
         self.addresses = addresses
         self.people = people
         address_indices = []
-        a2i = {id(a) : i for i,a in enumerate(addresses)}
+        a2i = {a : i for i,a in enumerate(addresses)}
         for person in self.people:
-            i = a2i[id(person.address)]
+            i = a2i[person.address]
             addr = ", ".join(person.address.compose())
             self.people_model.append((person.name, addr,
                                       person.email, person.phone))
+            address_indices.append(i)
         self.address_indices = address_indices
+        self.a2i = a2i
 
         # Add the editable final row:
         self.people_model.append(("","","",""))

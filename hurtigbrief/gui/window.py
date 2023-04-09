@@ -279,8 +279,8 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         dialog = ContactsDialog(self)
         dialog.set_data(self.addresses, self.people)
         dialog.connect("person_changed", self.on_person_change)
-        dialog.connect("address_changed", self.on_address_change)
         dialog.run()
+        dialog.destroy()
 
 
     def on_person_change(self, dialog, p_id: int):
@@ -288,21 +288,16 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         This slot is called when a person has changed from the address
         dialog.
         """
+        # Update the name model:
+        if p_id == self.name_model.iter_n_children():
+            # New row.
+            self.name_model.append((self.people[p_id].name,))
+        else:
+            # Existing row:
+            it = self.name_model.get_iter(p_id)
+            self.name_model.set(it, 0, self.people[p_id].name)
+
         # Check if the person is part of this letter and, if so,
         # recompile:
         if self.sender == p_id or self.destination == p_id:
-            self.generate_letter()
-
-
-    def on_address_change(self, dialog, a_id: int):
-        """
-        This slot is called when an address has changed.
-        """
-        change = False
-        addr = self.addresses[a_id]
-        if self.sender is not None:
-            change |= self.people[self.sender].address == addr
-        if self.destination is not None:
-            change |= self.people[self.destination].address == addr
-        if change:
             self.generate_letter()

@@ -43,8 +43,6 @@ class ContactsDialog(Gtk.Dialog):
                                         headers_visible=True)
         self.people_view.set_hexpand(True)
         self.people_view.set_vexpand(True)
-        print(self.people_model.get_n_columns())
-        print(self.people_view.get_columns())
 
         # The columns to display
         # 1) Name

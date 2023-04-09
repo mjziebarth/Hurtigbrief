@@ -35,6 +35,9 @@ class Address:
         self.postalcode = int(postalcode)
         self.city = str(city)
 
+    def __hash__(self):
+        return hash((self.street, self.number, self.postalcode, self.city))
+
     def compose(self) -> List[str]:
         raise NotImplementedError("Address compose not implemented for address "
                                   "of type " + str(type(self)))
@@ -64,6 +67,10 @@ class GermanAddress(Address):
         if hausnummer is not None:
             hausnummer = str(hausnummer)
         super().__init__(strasse, hausnummer, int(plz), str(stadt))
+
+    def __hash__(self):
+        return hash((self.street, self.number, self.postalcode, self.city,
+                     self.plz_only))
 
     def compose(self, international: bool = False) -> List[str]:
         country = []

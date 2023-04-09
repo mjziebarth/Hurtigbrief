@@ -82,6 +82,58 @@ class GermanAddress(Address):
                 str(self.postalcode) + " " + self.city] + country
 
     @staticmethod
+    def parse_address(addr: str) -> "GermanAddress":
+        """
+        Parse this German address from a string.
+
+        The address is expected in the following format:
+           STREET NAME XY, PLZ CITY NAME
+        where "STREET NAME" is the (possibly multi-worded) street
+        name, "XY" the one-word house number, "PLZ" the one-word
+        postal code, and "CITY NAME" the (possibly multi-worded)
+        city name.
+
+        This algorithm should cover most use cases but some degree of
+        `falsehoods <https://www.mjt.me.uk/posts/falsehoods-programmers-believe-about-addresses/>`_
+        is possible.
+        """
+        # Some string homogenization:
+        addr = addr.strip()
+
+        # Empty (invalid) default address:
+        if len(addr) == 0:
+            return GermanAddress()
+
+        # Split the address by the comma:
+        strnum, zipcity = addr.split(",")
+
+        # Get street and number from the first half:
+        strnum_split = strnum.split()
+        if len(strnum_split) > 1:
+            if any(c.isdigit() for c in strnum_split[-1]):
+                number = strnum_split[-1]
+                street = " ".join(strnum_split[:-1])
+            else:
+                number = None
+                street = strnum_split
+        elif len(strnum) > 0:
+            street = strnum
+            number = None
+        else:
+            street = None
+            number = None
+
+        # Get postal code and city from the second half:
+        zipcity_split = zipcity.split()
+        if len(zipcity_split) <= 1:
+            raise ValueError("Postal code and city need to be given.")
+        plz = int(zipcity_split[0])
+        city = " ".join(zipcity_split[1:])
+
+        return GermanAddress(street, number, plz, city)
+
+
+    @staticmethod
     def format_street(strasse: str) -> str:
         """
         This function formats streets with shortened syntax

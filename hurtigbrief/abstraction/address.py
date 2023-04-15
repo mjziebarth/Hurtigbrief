@@ -140,9 +140,10 @@ class GermanAddress(Address):
         (e.g. Brandenburger Straße -> Brandenburger Str.)
         """
         strasse = strasse.strip()
-        if strasse[-7:] == "strasse" or strasse[-6:] == "straße" \
-           or strasse[-7:] == "Strasse" or strasse[-6:] == "Straße":
+        if strasse[-7:] == "strasse" or strasse[-7:] == "Strasse":
             return strasse[:-4] + "."
+        elif strasse[-6:] == "straße" or strasse[-6:] == "Straße":
+            return strasse[:-3] + "."
 
         return strasse
 

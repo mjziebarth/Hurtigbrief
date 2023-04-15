@@ -115,7 +115,7 @@ class GermanAddress(Address):
                 street = " ".join(strnum_split[:-1])
             else:
                 number = None
-                street = strnum_split
+                street = " ".join(strnum_split)
         elif len(strnum) > 0:
             street = strnum
             number = None

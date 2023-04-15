@@ -78,8 +78,9 @@ class GermanAddress(Address):
             country.append("Germany")
         if self.plz_only:
             return [str(self.postalcode) + " " + self.city] + country
-        strnum = GermanAddress.format_street(self.street)
-        if self.number is not None:
+        has_number = self.number is not None
+        strnum = GermanAddress.format_street(self.street, has_number)
+        if has_number:
             strnum += " " + self.number
         return [strnum, str(self.postalcode) + " " + self.city] + country
 
@@ -136,12 +137,16 @@ class GermanAddress(Address):
 
 
     @staticmethod
-    def format_street(strasse: str) -> str:
+    def format_street(strasse: str, has_number: bool) -> str:
         """
         This function formats streets with shortened syntax
         (e.g. Brandenburger Straße -> Brandenburger Str.)
         """
         strasse = strasse.strip()
+        # If there is no number, do not abbreviate 'Straße':
+        if not has_number:
+            return strasse
+        # "Straße" -> "Str."
         if strasse[-7:] == "strasse" or strasse[-7:] == "Strasse":
             return strasse[:-4] + "."
         elif strasse[-6:] == "straße" or strasse[-6:] == "Straße":

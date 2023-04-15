@@ -78,8 +78,10 @@ class GermanAddress(Address):
             country.append("Germany")
         if self.plz_only:
             return [str(self.postalcode) + " " + self.city] + country
-        return [GermanAddress.format_street(self.street) + " " + self.number,
-                str(self.postalcode) + " " + self.city] + country
+        strnum = GermanAddress.format_street(self.street)
+        if self.number is not None:
+            strnum += " " + self.number
+        return [strnum, str(self.postalcode) + " " + self.city] + country
 
     @staticmethod
     def parse_address(addr: str) -> "GermanAddress":
@@ -172,7 +174,7 @@ def address_from_json(json: dict) -> Address:
             if "number" in json:
                 number = json["number"]
             else:
-                number = ""
+                number = None
         else:
             plz_only = True
             number = None

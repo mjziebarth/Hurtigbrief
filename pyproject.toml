@@ -20,4 +20,4 @@ dependencies = [
 where = ["."]
 
 [tool.setuptools.package-data]
-"*" = ["*.tex"]
+"*" = ["*.tex", "*.svg"]

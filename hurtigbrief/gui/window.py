@@ -27,6 +27,7 @@ from ..abstraction.person import Person
 from ..abstraction.letter import Letter
 from ..abstraction.design import Design
 from typing import Optional
+from importlib.resources import files
 
 
 class HurtigbriefWindow(Gtk.ApplicationWindow):
@@ -42,7 +43,6 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
 
     def __init__(self, application=None):
         super().__init__(application=application)
-        self.set_title("Hurtigbrief")
 
         # Some variables:
         self.addresses = [address_from_json(json)
@@ -65,6 +65,32 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
 
         # No default destination for a new letter.
         self.destination = None
+
+        # Header bar:
+        icon_letter = Gtk.Image.new_from_file(
+             str(files('hurtigbrief.gui.icons').joinpath('save-letter.svg'))
+        )
+        icon_pdf = Gtk.Image.new_from_file(
+             str(files('hurtigbrief.gui.icons').joinpath('save-pdf.svg'))
+        )
+        icon_contacts = Gtk.Image.new_from_file(
+             str(files('hurtigbrief.gui.icons').joinpath('save-contacts.svg'))
+        )
+        self.header_bar = Gtk.HeaderBar(title="Hurtigbrief")
+        self.header_bar.set_show_close_button(True)
+        self.save_letter_button = Gtk.Button(tooltip_text='Save letter')
+        self.save_letter_button.set_image(icon_letter)
+        self.save_letter_button.set_sensitive(False)
+        self.save_pdf_button = Gtk.Button(tooltip_text='Save PDF')
+        self.save_pdf_button.set_image(icon_pdf)
+        self.save_pdf_button.set_sensitive(False)
+        self.save_contacts_button = Gtk.Button(tooltip_text='Save contacts')
+        self.save_contacts_button.set_image(icon_contacts)
+        self.save_contacts_button.set_sensitive(False)
+        self.header_bar.pack_start(self.save_letter_button)
+        self.header_bar.pack_start(self.save_pdf_button)
+        self.header_bar.pack_start(self.save_contacts_button)
+        self.set_titlebar(self.header_bar)
 
 
         # Layout

@@ -375,7 +375,7 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         save_letter_dialog.add_buttons(
             Gtk.STOCK_CANCEL,
             Gtk.ResponseType.CANCEL,
-            Gtk.STOCK_OPEN,
+            Gtk.STOCK_SAVE,
             Gtk.ResponseType.OK,
         )
         status = save_letter_dialog.run()
@@ -396,8 +396,6 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         # Make sure that a letter has been selected:
         if self.letter_save_path is None:
             self.letter_save_path = self.select_letter_save_path()
-
-        print("letter_save_path:", self.letter_save_path)
 
         # If that failed, do not save.
         if self.letter_save_path is None:

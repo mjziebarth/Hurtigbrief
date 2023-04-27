@@ -63,3 +63,15 @@ class Person:
                                + str(len(address_list)) + ".")
         return Person(json["name"], address_list[aid], json["email"],
                       json["phone"])
+
+
+    def to_json(self) -> dict:
+        """
+        JSON-serialize this Person.
+        """
+        return {
+            "name" : self.name,
+            "address" : self.address.to_json(),
+            "email" : self.email,
+            "phone" : self.phone
+        }

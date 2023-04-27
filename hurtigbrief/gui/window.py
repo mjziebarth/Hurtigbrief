@@ -303,6 +303,7 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         """
         self.spinner.start()
         self.spinner_label.set_text(" compiling...")
+        self.save_pdf_button.set_sensitive(False)
 
     def finish_compiling(self):
         """
@@ -310,6 +311,7 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         """
         self.spinner.stop()
         self.spinner_label.set_text("")
+        self.save_pdf_button.set_sensitive(True)
 
     def on_receive_result(self, result: TaskResult):
         """

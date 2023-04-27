@@ -28,6 +28,8 @@ from ..abstraction.letter import Letter
 from ..abstraction.design import Design
 from typing import Optional
 from importlib.resources import files
+from pathlib import Path
+import json
 
 
 class HurtigbriefWindow(Gtk.ApplicationWindow):
@@ -80,7 +82,8 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         self.header_bar.set_show_close_button(True)
         self.save_letter_button = Gtk.Button(tooltip_text='Save letter')
         self.save_letter_button.set_image(icon_letter)
-        self.save_letter_button.set_sensitive(False)
+        #self.save_letter_button.set_sensitive(False)
+        self.save_letter_button.connect("clicked", self.on_save_letter_clicked)
         self.save_pdf_button = Gtk.Button(tooltip_text='Save PDF')
         self.save_pdf_button.set_image(icon_pdf)
         self.save_pdf_button.set_sensitive(False)
@@ -91,6 +94,9 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         self.header_bar.pack_start(self.save_pdf_button)
         self.header_bar.pack_start(self.save_contacts_button)
         self.set_titlebar(self.header_bar)
+
+        # Save dialogs:
+        self.letter_save_path = None
 
 
         # Layout
@@ -215,22 +221,18 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         return model
 
 
-    def generate_letter(self):
+    def get_letter_content(self):
         """
-        Generates the letter from the current content.
+        Compose the letter from the GUI element content.
         """
-        self.sender = self.cb_sender.get_active()
-        if self.sender == -1:
-            self.sender = None
-        self.destination = self.cb_destination.get_active()
-        if self.destination == -1:
-            self.destination = None
-        # Early exit if one of the people is not set:
-        if self.destination is None or self.sender is None:
-            return
+        sender = self.sender
+        if sender is not None:
+            sender = self.people[sender]
+        destination = self.destination
+        if destination is not None:
+            destination = self.people[destination]
 
-        sender = self.people[self.sender]
-        destination = self.people[self.destination]
+        # Content of the text editors:
         subject = self.subject_buffer.get_text(
             self.subject_buffer.get_start_iter(),
             self.subject_buffer.get_end_iter(),
@@ -251,6 +253,28 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
             self.closing_buffer.get_end_iter(),
             False
         )
+
+        return sender, destination, subject, opening, body, closing
+
+
+    def generate_letter(self):
+        """
+        Generates the letter from the current content.
+        """
+        self.sender = self.cb_sender.get_active()
+        if self.sender == -1:
+            self.sender = None
+        self.destination = self.cb_destination.get_active()
+        if self.destination == -1:
+            self.destination = None
+        # Early exit if one of the people is not set:
+        if self.destination is None or self.sender is None:
+            return
+
+        # Get the content of the GUI elements:
+        sender, destination, subject, opening, body, closing \
+           = self.get_letter_content()
+
         # Start the compilation feedback:
         self.start_compiling()
 
@@ -259,6 +283,13 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
                   Letter(sender, destination, subject, opening, body, closing),
                   Design(),
                   "scrletter")
+
+    def log_error(self, error):
+        """
+        This method logs the error.
+        """
+        # Easy version right now:
+        print("Error:",str(error))
 
     def on_letter_changed(self, *args):
         """
@@ -327,3 +358,61 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         # recompile:
         if self.sender == p_id or self.destination == p_id:
             self.generate_letter()
+
+
+    def select_letter_save_path(self) -> Optional[Path]:
+        """
+        This method will run a dialog to select the save path, and
+        return it on success.
+        """
+        save_letter_dialog = Gtk.FileChooserDialog(
+            parent = self,
+            title = "Save letter as",
+            action = Gtk.FileChooserAction.SAVE
+        )
+        save_letter_dialog.add_buttons(
+            Gtk.STOCK_CANCEL,
+            Gtk.ResponseType.CANCEL,
+            Gtk.STOCK_OPEN,
+            Gtk.ResponseType.OK,
+        )
+        status = save_letter_dialog.run()
+        path = None
+        if status == Gtk.ResponseType.OK:
+            path = Path(save_letter_dialog.get_filename())
+            if path.is_dir():
+                path = None
+
+        save_letter_dialog.destroy()
+        return path
+
+
+    def on_save_letter_clicked(self, *args):
+        """
+        This slot is called when the letter save button is clicked.
+        """
+        # Make sure that a letter has been selected:
+        if self.letter_save_path is None:
+            self.letter_save_path = self.select_letter_save_path()
+
+        print("letter_save_path:", self.letter_save_path)
+
+        # If that failed, do not save.
+        if self.letter_save_path is None:
+            return
+
+        # Save the letter:
+        sender, destination, subject, opening, body, closing \
+           = self.get_letter_content()
+
+        # JSON serialization:
+        if sender is not None:
+            sender = sender.to_json()
+        if destination is not None:
+            destination = destination.to_json()
+        try:
+            with open(self.letter_save_path, 'w') as f:
+                json.dump((sender, destination, subject, opening, body,
+                           closing), f)
+        except e:
+            self.log_error(e)

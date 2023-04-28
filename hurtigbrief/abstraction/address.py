@@ -162,6 +162,7 @@ class GermanAddress(Address):
         if self.plz_only:
             del json["street"]
             del json["number"]
+        json["country"] = "Germany"
         return json
 
 

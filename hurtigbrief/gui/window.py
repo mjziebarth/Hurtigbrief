@@ -51,6 +51,7 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
                           for json in default["addresses"]]
         self.people = [Person.from_json(json, self.addresses)
                        for json in default["people"]]
+        self.p2i = {p : i for i,p in enumerate(self.people)}
         default_sender = default["default_sender"]
         if default_sender is not None:
             default_sender = int(default_sender)
@@ -69,6 +70,9 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         self.destination = None
 
         # Header bar:
+        icon_load_letter = Gtk.Image.new_from_file(
+             str(files('hurtigbrief.gui.icons').joinpath('load-letter.svg'))
+        )
         icon_letter = Gtk.Image.new_from_file(
              str(files('hurtigbrief.gui.icons').joinpath('save-letter.svg'))
         )
@@ -80,6 +84,9 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         )
         self.header_bar = Gtk.HeaderBar(title="Hurtigbrief")
         self.header_bar.set_show_close_button(True)
+        self.load_letter_button = Gtk.Button(tooltip_text='Load letter')
+        self.load_letter_button.set_image(icon_load_letter)
+        self.load_letter_button.connect("clicked", self.on_load_letter_clicked)
         self.save_letter_button = Gtk.Button(tooltip_text='Save letter')
         self.save_letter_button.set_image(icon_letter)
         #self.save_letter_button.set_sensitive(False)
@@ -90,6 +97,7 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         self.save_contacts_button = Gtk.Button(tooltip_text='Save contacts')
         self.save_contacts_button.set_image(icon_contacts)
         self.save_contacts_button.set_sensitive(False)
+        self.header_bar.pack_start(self.load_letter_button)
         self.header_bar.pack_start(self.save_letter_button)
         self.header_bar.pack_start(self.save_pdf_button)
         self.header_bar.pack_start(self.save_contacts_button)
@@ -416,3 +424,116 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
                            closing), f)
         except e:
             self.log_error(e)
+
+
+    def select_letter_load_path(self) -> Optional[Path]:
+        """
+        This method will run a dialog to select the load path, and
+        return it on success.
+        """
+        load_letter_dialog = Gtk.FileChooserDialog(
+            parent = self,
+            title = "Load letter",
+            action = Gtk.FileChooserAction.SAVE
+        )
+        load_letter_dialog.add_buttons(
+            Gtk.STOCK_CANCEL,
+            Gtk.ResponseType.CANCEL,
+            Gtk.STOCK_OPEN,
+            Gtk.ResponseType.OK,
+        )
+        status = load_letter_dialog.run()
+        path = None
+        if status == Gtk.ResponseType.OK:
+            path = Path(load_letter_dialog.get_filename())
+            if not path.is_file():
+                path = None
+
+        load_letter_dialog.destroy()
+        return path
+
+
+    def on_load_letter_clicked(self, *args):
+        """
+        This slot is called when the letter load button is clicked.
+        """
+        # Select the letter to load:
+        letter_load_path = self.select_letter_load_path()
+
+        # If that failed, do not save.
+        if letter_load_path is None:
+            return
+
+        # load the letter:
+        try:
+            with open(letter_load_path, 'r') as f:
+                sender, destination, subject, opening, body, closing \
+                   = json.load(f)
+        except e:
+            self.log_error(e)
+            return
+
+        # A map that links addresses to the location in the address list:
+        a2i = {a : i for i,a in enumerate(self.addresses)}
+
+        # Reset the sender and destination so that we can safely call
+        # on_person_change without triggering a regeneration on each call:
+        self.sender = None
+        self.destination = None
+
+        # Obtain the addresses:
+        if sender is not None:
+            sender_address = address_from_json(sender["address"])
+            if sender_address in a2i:
+                sai = a2i[sender_address]
+            else:
+                sai = len(self.addresses)
+                self.addresses.append(sender_address)
+            sender["address"] = sai
+
+            # Generate the Person:
+            sender = Person.from_json(sender, self.addresses)
+            if sender in self.p2i:
+                si = self.p2i[sender]
+            else:
+                si = len(self.people)
+                self.people.append(sender)
+
+            # Now update the GUI:
+            self.on_person_change(self, si)
+
+
+        if destination is not None:
+            destination_address = address_from_json(destination["address"])
+            if destination_address in a2i:
+                dai = a2i[destination_address]
+            else:
+                dai = len(self.addresses)
+                self.addresses.append(destination_address)
+            destination["address"] = dai
+
+            # Generate the Person:
+            destination = Person.from_json(destination, self.addresses)
+            if destination in self.p2i:
+                di = self.p2i[destination]
+                self.destination = self.people[di]
+            else:
+                di = len(self.people)
+                self.people.append(destination)
+
+            self.on_person_change(self, di)
+
+        # Select sender and destination ids:
+        self.sender = si
+        self.destination = di
+        self.cb_sender.set_active(si)
+        self.cb_destination.set_active(di)
+
+        # Set the texts:
+        self.subject_buffer.set_text(subject)
+        self.opening_buffer.set_text(opening)
+        self.body_buffer.set_text(body)
+        self.closing_buffer.set_text(closing)
+
+        # Generate the letter:
+        self.generate_letter()

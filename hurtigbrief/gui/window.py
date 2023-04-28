@@ -89,7 +89,6 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         self.load_letter_button.connect("clicked", self.on_load_letter_clicked)
         self.save_letter_button = Gtk.Button(tooltip_text='Save letter')
         self.save_letter_button.set_image(icon_letter)
-        #self.save_letter_button.set_sensitive(False)
         self.save_letter_button.connect("clicked", self.on_save_letter_clicked)
         self.save_pdf_button = Gtk.Button(tooltip_text='Save PDF')
         self.save_pdf_button.set_image(icon_pdf)

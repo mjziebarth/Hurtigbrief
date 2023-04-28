@@ -29,6 +29,7 @@ from ..abstraction.design import Design
 from typing import Optional
 from importlib.resources import files
 from pathlib import Path
+from shutil import copyfile
 import json
 
 
@@ -98,6 +99,7 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         self.save_pdf_button = Gtk.Button(tooltip_text='Save PDF')
         self.save_pdf_button.set_image(icon_pdf)
         self.save_pdf_button.set_sensitive(False)
+        self.save_pdf_button.connect("clicked", self.on_save_pdf_clicked)
         self.save_contacts_button = Gtk.Button(tooltip_text='Save contacts')
         self.save_contacts_button.set_image(icon_contacts)
         self.save_contacts_button.set_sensitive(False)
@@ -109,6 +111,7 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
 
         # Save dialogs:
         self.letter_save_path = None
+        self.pdf_save_path = None
 
 
         # Layout
@@ -380,14 +383,14 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
             self.generate_letter()
 
 
-    def select_letter_save_path(self) -> Optional[Path]:
+    def select_save_path(self, which: str) -> Optional[Path]:
         """
         This method will run a dialog to select the save path, and
         return it on success.
         """
         save_letter_dialog = Gtk.FileChooserDialog(
             parent = self,
-            title = "Save letter as",
+            title = "Save " + which + " as",
             action = Gtk.FileChooserAction.SAVE
         )
         save_letter_dialog.add_buttons(
@@ -413,7 +416,7 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         """
         # Make sure that a letter has been selected:
         if self.letter_save_path is None:
-            self.letter_save_path = self.select_letter_save_path()
+            self.letter_save_path = self.select_save_path("letter")
 
         # If that failed, do not save.
         if self.letter_save_path is None:
@@ -565,3 +568,22 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
 
         # Generate the letter:
         self.generate_letter()
+
+
+    def on_save_pdf_clicked(self, *args):
+        """
+        Saves the PDF, potentially opening a save path dialog before.
+        """
+        # Make sure that a letter has been selected:
+        if self.pdf_save_path is None:
+            self.pdf_save_path = self.select_save_path("PDF")
+
+        # If that failed, do not save.
+        if self.pdf_save_path is None:
+            return
+
+        # Save the PDF.
+        # The path in `self.document_path` is a URI starting with
+        # 'file://'. Split this prefix here:
+        doc = self.document_path[7:]
+        copyfile(doc, self.pdf_save_path)

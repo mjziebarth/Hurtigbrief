@@ -69,6 +69,11 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         # No default destination for a new letter.
         self.destination = None
 
+        # The signal handlers that react on changed GUI components
+        # (we need to deactivate them when loading a letter so as not to
+        # trigger too many calls to generate_letter at the same time)
+        self.gui_handlers = dict()
+
         # Header bar:
         icon_load_letter = Gtk.Image.new_from_file(
              str(files('hurtigbrief.gui.icons').joinpath('load-letter.svg'))
@@ -125,8 +130,10 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         label_destination = Gtk.Label('To:', halign=Gtk.Align.START)
         layout_left.attach(label_destination, 0, 1, 1, 1)
         self.cb_destination = Gtk.ComboBox.new_with_model(self.name_model)
-        self.cb_destination.connect("changed", self.on_letter_changed)
-        self.cb_sender.connect("changed", self.on_letter_changed)
+        h0 = self.cb_destination.connect("changed", self.on_letter_changed)
+        self.gui_handlers[id(self.cb_destination)] = h0
+        h1 = self.cb_sender.connect("changed", self.on_letter_changed)
+        self.gui_handlers[id(self.cb_sender)] = h1
         renderer = Gtk.CellRendererText()
         self.cb_destination.pack_start(renderer, True)
         self.cb_destination.add_attribute(renderer, 'text', 0)
@@ -154,21 +161,24 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         except:
             language = None
         self.subject_buffer = GtkSource.Buffer(language=language)
-        self.subject_buffer.connect('changed', self.on_letter_changed)
+        h2 = self.subject_buffer.connect('changed', self.on_letter_changed)
+        self.gui_handlers[id(self.subject_buffer)] = h2
         self.subject_edit = GtkSource.View(buffer=self.subject_buffer)
         layout_left.attach(self.subject_edit, 0, 2, 4, 1)
 
         # The opening:
         self.opening_buffer = GtkSource.Buffer(language=language)
         self.opening_buffer.set_text(default['opening'])
-        self.opening_buffer.connect('changed', self.on_letter_changed)
+        h3 = self.opening_buffer.connect('changed', self.on_letter_changed)
+        self.gui_handlers[id(self.opening_buffer)] = h3
         self.opening_edit = GtkSource.View(buffer=self.opening_buffer)
         layout_left.attach(self.opening_edit, 0, 3, 4, 1)
 
         # The main body text source view:
         bodyscroll = Gtk.ScrolledWindow()
         self.body_buffer = GtkSource.Buffer(language=language)
-        self.body_buffer.connect('changed', self.on_letter_changed)
+        h4 = self.body_buffer.connect('changed', self.on_letter_changed)
+        self.gui_handlers[id(self.body_buffer)] = h4
         self.body_edit = GtkSource.View(buffer=self.body_buffer, expand = True)
         bodyscroll.add(self.body_edit)
         layout_left.attach(bodyscroll, 0, 4, 4, 1)
@@ -176,7 +186,8 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         # The closing:
         self.closing_buffer = GtkSource.Buffer(language=language)
         self.closing_buffer.set_text(default['closing'])
-        self.closing_buffer.connect('changed', self.on_letter_changed)
+        h5 = self.closing_buffer.connect('changed', self.on_letter_changed)
+        self.gui_handlers[id(self.closing_buffer)] = h5
         self.closing_edit = GtkSource.View(buffer=self.closing_buffer)
         layout_left.attach(self.closing_edit, 0, 5, 4, 1)
 
@@ -525,14 +536,32 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         # Select sender and destination ids:
         self.sender = si
         self.destination = di
-        self.cb_sender.set_active(si)
-        self.cb_destination.set_active(di)
+        with self.cb_sender.handler_block(
+            self.gui_handlers[id(self.cb_sender)]
+        ):
+            self.cb_sender.set_active(si)
+        with self.cb_destination.handler_block(
+            self.gui_handlers[id(self.cb_destination)]
+        ):
+            self.cb_destination.set_active(di)
 
         # Set the texts:
-        self.subject_buffer.set_text(subject)
-        self.opening_buffer.set_text(opening)
-        self.body_buffer.set_text(body)
-        self.closing_buffer.set_text(closing)
+        with self.subject_buffer.handler_block(
+                self.gui_handlers[id(self.subject_buffer)]
+        ):
+            self.subject_buffer.set_text(subject)
+        with self.opening_buffer.handler_block(
+                self.gui_handlers[id(self.subject_buffer)]
+        ):
+            self.opening_buffer.set_text(opening)
+        with self.body_buffer.handler_block(
+                self.gui_handlers[id(self.body_buffer)]
+        ):
+            self.body_buffer.set_text(body)
+        with self.body_buffer.handler_block(
+                self.bui_handlers[id(self.closing_buffer)]
+        ):
+            self.closing_buffer.set_text(closing)
 
         # Generate the letter:
         self.generate_letter()

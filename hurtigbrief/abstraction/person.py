@@ -43,6 +43,10 @@ class Person:
         self.phone = str(phone) if phone is not None else None
 
 
+    def __hash__(self):
+        return hash((self.name, self.address, self.email, self.phone))
+
+
     def compose_address(self) -> str:
         """
         Compose an address.

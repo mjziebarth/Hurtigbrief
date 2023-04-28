@@ -63,6 +63,10 @@ class Scheduler:
         """
         Register the waiting time between two keystrokes.
         """
+        # Limit waiting time to 5 seconds:
+        if T > 5.0:
+            return
+
         if len(self.keystroke_times) < 1000:
             self.keystroke_times.append(T)
         else:

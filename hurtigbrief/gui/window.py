@@ -438,6 +438,25 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
             if path.is_dir():
                 path = None
 
+        # If path exists, ask for overwrite confirmation:
+        if path is not None and path.exists():
+            confirm_dialog = Gtk.MessageDialog(
+                transient_for=save_letter_dialog,
+                flags=0,
+                message_type=Gtk.MessageType.WARNING,
+                buttons=Gtk.ButtonsType.OK_CANCEL,
+                text="File exists",
+            )
+            confirm_dialog.format_secondary_text(
+                "Proceed with overwriting the existing file?"
+            )
+            response = confirm_dialog.run()
+
+            if response == Gtk.ResponseType.CANCEL:
+                # Do not overwrite!
+                path = None
+            confirm_dialog.destroy()
+
         save_letter_dialog.destroy()
         return path
 

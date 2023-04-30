@@ -78,3 +78,11 @@ class HurtigbriefApp(Gtk.Application):
         Receive the runtime of the LaTeX compilation in seconds.
         """
         self.scheduler.register_compile_time(compile_time)
+
+
+def run_hurtigbrief():
+    """
+    Main entry point for running the App.
+    """
+    app = HurtigbriefApp()
+    app.run()

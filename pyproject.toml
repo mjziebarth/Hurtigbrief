@@ -16,6 +16,9 @@ dependencies = [
     "pygobject"
 ]
 
+[project.scripts]
+hurtigbrief = "hurtigbrief.gui.app:run_hurtigbrief"
+
 [tool.setuptools.packages.find]
 where = ["."]
 

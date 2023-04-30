@@ -20,7 +20,7 @@
 from .gtk import Gtk, GObject
 from ..abstraction.address import Address, GermanAddress
 from ..abstraction.person import Person
-from typing import List
+from typing import List, Optional
 
 
 class ContactsDialog(Gtk.Dialog):
@@ -30,7 +30,9 @@ class ContactsDialog(Gtk.Dialog):
 
     __gsignals__ = {
         "person_changed" : (GObject.SIGNAL_RUN_FIRST, None,
-                            (object,))
+                            (object,)),
+        "default_sender_changed" : (GObject.SIGNAL_RUN_FIRST, None,
+                                    (object,))
     }
 
     def __init__(self, parent, address_type=GermanAddress):
@@ -73,10 +75,18 @@ class ContactsDialog(Gtk.Dialog):
         column.set_expand(True)
         self.people_view.append_column(column)
 
+        # Default contact:
+        label_sender = Gtk.Label('Default sender:', halign=Gtk.Align.START)
+        self.cb_default_sender = Gtk.ComboBox()
+        renderer = Gtk.CellRendererText()
+        self.cb_default_sender.pack_start(renderer, True)
+        self.cb_default_sender.add_attribute(renderer, 'text', 0)
+
 
         layout = Gtk.Grid()
-        layout.attach(Gtk.Label("Contacts:"), 0, 0, 1, 1)
-        layout.attach(self.people_view, 0, 1, 1, 1)
+        layout.attach(self.people_view, 0, 0, 2, 1)
+        layout.attach(label_sender, 0, 1, 1, 1)
+        layout.attach(self.cb_default_sender, 1, 1, 1, 1)
         self.get_content_area().add(layout)
         self.show_all()
 
@@ -171,7 +181,8 @@ class ContactsDialog(Gtk.Dialog):
         self.edited(row, 3, new_text)
 
 
-    def set_data(self, addresses: List[Address], people: List[Person]):
+    def set_data(self, addresses: List[Address], people: List[Person],
+                 default_sender: Optional[int]):
         """
         Register the contact 'data base'.
         """
@@ -190,3 +201,21 @@ class ContactsDialog(Gtk.Dialog):
 
         # Add the editable final row:
         self.people_model.append(("","","",""))
+
+        # Set the default sender:
+        self.cb_default_sender.set_model(self.people_model)
+        self.cb_default_sender.connect("changed",
+                                       self.on_default_sender_changed)
+        if default_sender is not None:
+            self.cb_default_sender.set_active(default_sender)
+
+
+    def on_default_sender_changed(self, cbox):
+        """
+        This slot is called when the default sender ComboBox
+        is changed.
+        """
+        active = self.cb_default_sender.get_active()
+        if active == -1:
+            active = None
+        self.emit("default_sender_changed", active)

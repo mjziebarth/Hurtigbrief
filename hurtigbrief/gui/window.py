@@ -381,8 +381,9 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         Shows a dialog to edit the address book.
         """
         dialog = ContactsDialog(self)
-        dialog.set_data(self.addresses, self.people)
+        dialog.set_data(self.addresses, self.people, self.default_sender)
         dialog.connect("person_changed", self.on_person_change)
+        dialog.connect("default_sender_changed", self.on_default_sender_changed)
         dialog.run()
         dialog.destroy()
 
@@ -656,3 +657,11 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         # Disable the button:
         self.contacts_hash = self.compute_contacts_hash()
         self.save_contacts_button.set_sensitive(False)
+
+
+    def on_default_sender_changed(self, dialog, new_default_sender: int):
+        """
+        Connected to the respective signal of the contacts dialog.
+        """
+        self.default_sender = new_default_sender
+        self.check_save_contacts_button()

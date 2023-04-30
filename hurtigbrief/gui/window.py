@@ -426,6 +426,10 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
             Gtk.STOCK_SAVE,
             Gtk.ResponseType.OK,
         )
+        file_filter = Gtk.FileFilter()
+        file_filter.set_name("Hurtigbrief files")
+        file_filter.add_pattern("*.hbrief")
+        save_letter_dialog.add_filter(file_filter)
         status = save_letter_dialog.run()
         path = None
         if status == Gtk.ResponseType.OK:
@@ -482,6 +486,10 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
             Gtk.STOCK_OPEN,
             Gtk.ResponseType.OK,
         )
+        file_filter = Gtk.FileFilter()
+        file_filter.set_name("Hurtigbrief files")
+        file_filter.add_pattern("*.hbrief")
+        load_letter_dialog.add_filter(file_filter)
         status = load_letter_dialog.run()
         path = None
         if status == Gtk.ResponseType.OK:

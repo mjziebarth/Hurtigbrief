@@ -3,7 +3,7 @@ name = "hurtigbrief"
 version = "0.1.0"
 description = "A letter-generating interface to LaTeX typesetting."
 readme = "README.md"
-license = {file = "LICENSE"}
+license = {file = "COPYING"}
 authors = [
     {email = "mjz.science@fmvkb.de"},
     {name = "Malte J. Ziebarth"}

@@ -410,7 +410,8 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
             self.generate_letter()
 
 
-    def select_save_path(self, which: str) -> Optional[Path]:
+    def select_save_path(self, which: str, file_pattern_name: str,
+                         file_pattern_glob: str) -> Optional[Path]:
         """
         This method will run a dialog to select the save path, and
         return it on success.
@@ -427,8 +428,8 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
             Gtk.ResponseType.OK,
         )
         file_filter = Gtk.FileFilter()
-        file_filter.set_name("Hurtigbrief files")
-        file_filter.add_pattern("*.hbrief")
+        file_filter.set_name(file_pattern_name)
+        file_filter.add_pattern(file_pattern_glob)
         save_letter_dialog.add_filter(file_filter)
         status = save_letter_dialog.run()
         path = None
@@ -447,7 +448,9 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         """
         # Make sure that a letter has been selected:
         if self.letter_save_path is None:
-            self.letter_save_path = self.select_save_path("letter")
+            self.letter_save_path \
+               = self.select_save_path("letter", "Hurtigbrief files",
+                                       "*.hbrief")
 
         # If that failed, do not save.
         if self.letter_save_path is None:
@@ -611,7 +614,8 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         """
         # Make sure that a letter has been selected:
         if self.pdf_save_path is None:
-            self.pdf_save_path = self.select_save_path("PDF")
+            self.pdf_save_path = self.select_save_path("PDF", "PDF files",
+                                                       "*.pdf")
 
         # If that failed, do not save.
         if self.pdf_save_path is None:

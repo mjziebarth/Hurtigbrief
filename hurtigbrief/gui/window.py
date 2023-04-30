@@ -651,7 +651,7 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         """
         Saves the contact list.
         """
-        save_contacts(self.sender, self.addresses, self.people)
+        save_contacts(self.default_sender, self.addresses, self.people)
 
         # Disable the button:
         self.contacts_hash = self.compute_contacts_hash()

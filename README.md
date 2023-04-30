@@ -32,6 +32,10 @@ The LaTeX template data files in the `hurtigbrief/latex/templates/data/`
 subdirectory are licensed under the `LPPL-1.3c` license.
 
 ## Changelog
+### [0.1.2] 2023-04-30
+#### Changes
+- Fix version number
+
 ### [0.1.0] 2023-04-30
 #### Changes
 - Slight change to the config file format.

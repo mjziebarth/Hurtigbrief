@@ -17,6 +17,13 @@ hurtigbrief
 ```
 after installation.
 
+## Configuration
+Hurtigbrief uses a configuration file that is located using the `appdirs`
+package. On a Linux distribution, this might be
+`~/.config/hurtigbrief/hurtigbrief.conf`. This configuration file is a JSON
+file that can be edited manually (besides using the GUI functionality provided
+by Hurtigbrief).
+
 ## License
 The Hurtigbrief Python module is licensed under the `GPL-3.0-or-later` (see
 LICENSE file in this directory).
@@ -25,5 +32,9 @@ The LaTeX template data files in the `hurtigbrief/latex/templates/data/`
 subdirectory are licensed under the `LPPL-1.3c` license.
 
 ## Changelog
+### [0.1.0] 2023-04-30
+#### Changes
+- Slight change to the config file format.
+
 ### [0.1.0] 2023-04-30
 First feature-complete version.

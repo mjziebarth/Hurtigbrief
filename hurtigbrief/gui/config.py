@@ -79,4 +79,4 @@ def save_contacts(default_sender: Optional[int],
             "default_sender" : default_sender,
             "addresses" : [a.to_json() for a in addresses],
             "people" : [person_to_json(p) for p in people]
-        }, f)
+        }, f, indent=2, sort_keys=True)

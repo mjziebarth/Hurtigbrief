@@ -20,6 +20,7 @@
 import json
 from os import mkdir
 from pathlib import Path
+from typing import Optional
 from appdirs import user_config_dir
 
 # Get the configuration directory:
@@ -57,3 +58,25 @@ except FileNotFoundError:
 except:
     raise RuntimeError("Configuration file " + str(conffile.absolute())
                        + " cannot be loaded.")
+
+# Save the configuration file:
+def save_contacts(default_sender: Optional[int],
+                  addresses: list[dict],
+                  people: list[dict]):
+    """
+    This function saves the config file.
+    """
+    a2i = {a : i for i,a in enumerate(addresses)}
+    def person_to_json(p) -> str:
+        jsn = p.to_json()
+        jsn["address"] = a2i[p.address]
+        return jsn
+
+    with open(conffile, "w") as f:
+        json.dump({
+            "closing" : default["closing"],
+            "opening" : default["opening"],
+            "default_sender" : default_sender,
+            "addresses" : [a.to_json() for a in addresses],
+            "people" : [person_to_json(p) for p in people]
+        }, f)

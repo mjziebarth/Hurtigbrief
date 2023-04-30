@@ -18,7 +18,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from .gtk import Gtk, GtkSource, EvinceView, GObject, EvinceDocument
-from .config import default
+from .config import default, save_contacts
 from .types import TemplateName
 from .task import TaskResult
 from .contacts import ContactsDialog
@@ -62,7 +62,12 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
                 self.sender = None
         else:
             self.sender = None
+        self.default_sender = default_sender
         print("addresses:", self.addresses)
+
+        # Use this information to enable or disable the 'Save Contacts'
+        # button:
+        self.contacts_hash = self.compute_contacts_hash()
 
         self.document_path = None
         self.document = None
@@ -103,6 +108,8 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         self.save_contacts_button = Gtk.Button(tooltip_text='Save contacts')
         self.save_contacts_button.set_image(icon_contacts)
         self.save_contacts_button.set_sensitive(False)
+        self.save_contacts_button.connect("clicked",
+                                          self.on_save_contacts_clicked)
         self.header_bar.pack_start(self.load_letter_button)
         self.header_bar.pack_start(self.save_letter_button)
         self.header_bar.pack_start(self.save_pdf_button)
@@ -232,6 +239,14 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
                                   round(font_height * 40))
 
 
+    def compute_contacts_hash(self):
+        """
+        Compute a hash that identifies the current contact information.
+        """
+        return hash((self.default_sender, tuple(self.addresses),
+                     tuple(self.people)))
+
+
     def generate_contact_list_model(self):
         """
         Generates a GtkListStore model from the list of addresses.
@@ -352,6 +367,15 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
             self.document.load(self.document_path)
             self.pdf_view.reload()
 
+    def check_save_contacts_button(self):
+        """
+        Checks whether the 'Save Contacts' button should be updated.
+        """
+        contacts_hash = self.compute_contacts_hash()
+        if self.contacts_hash != contacts_hash:
+            self.save_contacts_button.set_sensitive(True)
+
+
     def show_address_dialog(self, *args):
         """
         Shows a dialog to edit the address book.
@@ -376,6 +400,9 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
             # Existing row:
             it = self.name_model.get_iter(p_id)
             self.name_model.set(it, 0, self.people[p_id].name)
+
+        # Check if we need to enable the contacts save button:
+        self.check_save_contacts_button()
 
         # Check if the person is part of this letter and, if so,
         # recompile:
@@ -587,3 +614,14 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         # 'file://'. Split this prefix here:
         doc = self.document_path[7:]
         copyfile(doc, self.pdf_save_path)
+
+
+    def on_save_contacts_clicked(self, *args):
+        """
+        Saves the contact list.
+        """
+        save_contacts(self.sender, self.addresses, self.people)
+
+        # Disable the button:
+        self.contacts_hash = self.compute_contacts_hash()
+        self.save_contacts_button.set_sensitive(False)

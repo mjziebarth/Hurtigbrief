@@ -18,6 +18,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from .person import Person
+from typing import Optional
 
 class Letter:
     """
@@ -29,9 +30,11 @@ class Letter:
     opening: str
     body: str
     closing: str
+    signature: Optional[str]
 
     def __init__(self, sender: Person, destination: Person,
-                 subject: str, opening: str, body: str, closing: str):
+                 subject: str, opening: str, body: str, closing: str,
+                 signature: Optional[str]):
         assert isinstance(sender, Person)
         assert isinstance(destination, Person)
         self.sender = sender
@@ -40,3 +43,4 @@ class Letter:
         self.opening = str(opening)
         self.body = str(body)
         self.closing = str(closing)
+        self.signature = str(signature) if signature is not None else None

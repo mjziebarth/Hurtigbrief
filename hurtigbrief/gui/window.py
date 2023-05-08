@@ -209,6 +209,24 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         self.closing_edit = GtkSource.View(buffer=self.closing_buffer)
         layout_left.attach(self.closing_edit, 0, 5, 4, 1)
 
+        # The signature name:
+        self.signature_buffer = GtkSource.Buffer(language=language)
+        if self.sender is not None:
+            self.signature_buffer.set_text(self.people[self.sender].name)
+        h6 = self.signature_buffer.connect('changed', self.on_letter_changed)
+        self.gui_handlers[id(self.signature_buffer)] = h6
+        self.signature_edit = GtkSource.View(buffer=self.signature_buffer)
+        self.signature_edit.set_sensitive(False)
+        self.signature_from_sender_button = Gtk.CheckButton('from sender')
+        self.signature_from_sender_button.set_active(True)
+        self.signature_from_sender_button.connect(
+            'toggled',
+            self.on_signature_from_sender_toggled
+        )
+        self.signature_from_sender = True
+        layout_left.attach(self.signature_edit, 0, 6, 2, 1)
+        layout_left.attach(self.signature_from_sender_button, 2, 6, 2, 1)
+
         # The PDF view:
         self.pdf_document_model = EvinceView.DocumentModel()
         self.pdf_view = EvinceView.View(expand = True)
@@ -223,7 +241,7 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         progress_layout.pack_start(self.spinner, False, False, 0)
         self.spinner_label = Gtk.Label("", halign=Gtk.Align.START)
         progress_layout.pack_start(self.spinner_label, True, True, 0)
-        layout_left.attach(progress_layout, 0, 6, 2, 1)
+        layout_left.attach(progress_layout, 0, 7, 2, 1)
 
         self.add(layout)
 
@@ -297,8 +315,18 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
             self.closing_buffer.get_end_iter(),
             False
         )
+        if self.signature_from_sender_button.get_active():
+            # Signature from sender. Set to None, which equals default.
+            signature = None
+        else:
+            # Custom signature given.
+            signature = self.signature_buffer.get_text(
+                self.signature_buffer.get_start_iter(),
+                self.signature_buffer.get_end_iter(),
+                False
+            )
 
-        return sender, destination, subject, opening, body, closing
+        return sender, destination, subject, opening, body, closing, signature
 
 
     def generate_letter(self):
@@ -316,7 +344,7 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
             return
 
         # Get the content of the GUI elements:
-        sender, destination, subject, opening, body, closing \
+        sender, destination, subject, opening, body, closing, signature \
            = self.get_letter_content()
 
         # Start the compilation feedback:
@@ -324,7 +352,8 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
 
         # Notify the task manager:
         self.emit("letter_changed",
-                  Letter(sender, destination, subject, opening, body, closing),
+                  Letter(sender, destination, subject, opening, body, closing,
+                         signature),
                   Design(),
                   "scrletter")
 
@@ -489,7 +518,7 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
             return
 
         # Save the letter:
-        sender, destination, subject, opening, body, closing \
+        sender, destination, subject, opening, body, closing, signature \
            = self.get_letter_content()
 
         # JSON serialization:
@@ -500,7 +529,7 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         try:
             with open(self.letter_save_path, 'w') as f:
                 json.dump((sender, destination, subject, opening, body,
-                           closing), f)
+                           closing, signature), f)
         except e:
             self.log_error(e)
 
@@ -550,8 +579,28 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         # load the letter:
         try:
             with open(letter_load_path, 'r') as f:
-                sender, destination, subject, opening, body, closing \
-                   = json.load(f)
+                letter = json.load(f)
+
+            #
+            # Here  we handle the format of different versions.
+            # The top level element of the JSON is a list. It contains at least
+            # six elements (of version 0.1.2).
+            # Further versions might append additional elements to this list,
+            # and the following code aims to fill those additional elements with
+            # sensible defaults. This should allow the user to open letters
+            # saved with previous versions of Hurtigbrief.
+            #
+            # v0.1.2 format:
+            sender, destination, subject, opening, body, closing = letter[:6]
+
+            # v0.1.3 format:
+            # Custom signature not known before 0.1.3, so we can safely default
+            # to None (= no custom signature)
+            if len(letter) >= 7:
+                signature = letter[6]
+            else:
+                signature = None
+
         except e:
             self.log_error(e)
             return
@@ -636,6 +685,18 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         ):
             self.closing_buffer.set_text(closing)
 
+        with self.signature_buffer.handler_block(
+                self.gui_handlers[id(self.signature_buffer)]
+        ):
+            if signature is None:
+                self.signature_from_sender = True
+                self.signature_buffer.set_text(self.people[self.sender].name)
+                self.signature_edit.set_sensitive(False)
+            else:
+                self.signature_from_sender = False
+                self.signature_buffer.set_text(signature)
+                self.signature_edit.set_sensitive(True)
+
         # Generate the letter:
         self.generate_letter()
 
@@ -697,3 +758,30 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         """
         self.default_sender = new_default_sender
         self.check_save_contacts_button()
+
+
+    def on_signature_from_sender_toggled(self, button):
+        """
+        When the check box "from sender" is toggled.
+        """
+        # Save the state:
+        self.signature_from_sender = button.get_active()
+
+        if self.signature_from_sender:
+            # If reactivated, we have to update the signature:
+            if self.sender is None:
+                self.signature_buffer.set_text("")
+            else:
+                # Update the text (if it is new):
+                previous = self.signature_buffer.get_text(
+                    self.signature_buffer.get_start_iter(),
+                    self.signature_buffer.get_end_iter(),
+                    False
+                )
+                new = self.people[self.sender].name
+                if previous != new:
+                    self.signature_buffer.set_text(new)
+            self.signature_edit.set_sensitive(False)
+        else:
+            # Otherwise, enable the text edit:
+            self.signature_edit.set_sensitive(True)

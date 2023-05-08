@@ -37,7 +37,7 @@ def load_scrletter_template() -> Tuple[str,str]:
 ALL_TOKENS = ["%%FROMEMAILFLAG", "%%FROMEMAIL", "%%FROMPHONEFLAG",
               "%%FROMPHONE", "%%FROMNAME", "%%FROMZIPCODE", "%%FROMADDRESS",
               "%%TOADDRESS", "%%SUBJECT", "%%OPENING", "%%CONTENT",
-              "%%CLOSING", "%%FONT"]
+              "%%CLOSING", "%%FONT", "%%CUSTOMSIGNATURE"]
 
 _scrletter_tex, _scrletter_preamble_tex = load_scrletter_template()
 _scrletter_tokenizer = Tokenizer(_scrletter_tex, ALL_TOKENS)
@@ -83,6 +83,12 @@ def create_scr_letter(letter: Letter, design: Design) -> Tuple[str,str]:
     token_map["%%CONTENT"] = letter.body
     token_map["%%CLOSING"] = letter.closing
 
+    # Custom signature:
+    if letter.signature is not None:
+        token_map["%%CUSTOMSIGNATURE"] = \
+           "\\newcommand{\customsignature}{" + letter.signature + "}\n"
+    else:
+        token_map["%%CUSTOMSIGNATURE"] = ""
 
     # Letter style:
     token_map["%%FONT"] = design.font

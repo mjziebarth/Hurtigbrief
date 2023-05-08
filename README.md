@@ -33,7 +33,11 @@ subdirectory are licensed under the `LPPL-1.3c` license.
 
 ## Changelog
 ### Unreleased
-#### Changes
+#### Added
+- Add option to provide custom signature that is not automatically derived
+  as the sender's name (e.g. first name only).
+
+#### Changed
 - Fix typo that prevented loading of closing from saved `.hbrief` letters.
 - Ensure that empty email and phone fields (`""`) lead to hidden respective
   fields in the contact area.
@@ -42,11 +46,11 @@ subdirectory are licensed under the `LPPL-1.3c` license.
 - Fix `-interaction=nonstopmode` command in `do_latex`.
 
 ### [0.1.2] 2023-04-30
-#### Changes
+#### Changed
 - Fix version number
 
 ### [0.1.0] 2023-04-30
-#### Changes
+#### Changed
 - Slight change to the config file format.
 
 ### [0.1.0] 2023-04-30

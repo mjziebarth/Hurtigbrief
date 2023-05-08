@@ -1,6 +1,6 @@
 [project]
 name = "hurtigbrief"
-version = "0.1.2"
+version = "0.1.3"
 description = "A letter-generating interface to LaTeX typesetting."
 readme = "README.md"
 license = {file = "COPYING"}

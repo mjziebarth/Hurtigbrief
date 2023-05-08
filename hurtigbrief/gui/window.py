@@ -90,6 +90,9 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         icon_pdf = Gtk.Image.new_from_file(
              str(files('hurtigbrief.gui.icons').joinpath('save-pdf.svg'))
         )
+        icon_tex = Gtk.Image.new_from_file(
+             str(files('hurtigbrief.gui.icons').joinpath('save-tex.svg'))
+        )
         icon_contacts = Gtk.Image.new_from_file(
              str(files('hurtigbrief.gui.icons').joinpath('save-contacts.svg'))
         )
@@ -105,6 +108,10 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         self.save_pdf_button.set_image(icon_pdf)
         self.save_pdf_button.set_sensitive(False)
         self.save_pdf_button.connect("clicked", self.on_save_pdf_clicked)
+        self.save_tex_button = Gtk.Button(tooltip_text='Export Latex document')
+        self.save_tex_button.set_image(icon_tex)
+        self.save_tex_button.set_sensitive(False)
+        self.save_tex_button.connect("clicked", self.on_save_tex_clicked)
         self.save_contacts_button = Gtk.Button(tooltip_text='Save contacts')
         self.save_contacts_button.set_image(icon_contacts)
         self.save_contacts_button.set_sensitive(False)
@@ -113,6 +120,7 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         self.header_bar.pack_start(self.load_letter_button)
         self.header_bar.pack_start(self.save_letter_button)
         self.header_bar.pack_start(self.save_pdf_button)
+        self.header_bar.pack_start(self.save_tex_button)
         self.header_bar.pack_start(self.save_contacts_button)
         self.set_titlebar(self.header_bar)
 
@@ -650,6 +658,26 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         # 'file://'. Split this prefix here:
         doc = self.document_path[7:]
         copyfile(doc, self.pdf_save_path)
+
+
+    def on_save_tex_clicked(self, *args):
+        """
+        Saves the TEX, potentially opening a save path dialog before.
+        """
+        # Make sure that a letter has been selected:
+        if self.tex_save_path is None:
+            self.tex_save_path = self.select_save_path("Latex document",
+                                                        "TEX files",
+                                                        "*.tex")
+
+        # If that failed, do not save.
+        if self.tex_save_path is None:
+            return
+
+        # Save the TEX.
+        raise NotImplementedError()
+        #tex_doc = self.document_path[7:]
+        copyfile(tex_doc, self.tex_save_path)
 
 
     def on_save_contacts_clicked(self, *args):

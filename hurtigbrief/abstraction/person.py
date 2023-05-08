@@ -39,8 +39,17 @@ class Person:
             raise TypeError("`address` has to be an `Address` instance.")
         self.name = str(name)
         self.address = address
-        self.email = str(email) if email is not None else None
-        self.phone = str(phone) if phone is not None else None
+        # Ensure that None and "" map to None:
+        if email is not None:
+            email = str(email)
+            if len(email) == 0:
+                email = None
+        if phone is not None:
+            phone = str(phone)
+            if len(phone) == 0:
+                phone = None
+        self.email = email
+        self.phone = phone
 
 
     def __hash__(self):

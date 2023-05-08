@@ -35,6 +35,8 @@ subdirectory are licensed under the `LPPL-1.3c` license.
 ### Unreleased
 #### Changes
 - Fix typo that prevented loading of closing from saved `.hbrief` letters.
+- Ensure that empty email and phone fields (`""`) lead to hidden respective
+  fields in the contact area.
 
 ### [0.1.2] 2023-04-30
 #### Changes

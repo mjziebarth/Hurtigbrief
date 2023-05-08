@@ -54,7 +54,7 @@ def do_latex(letter: Letter, design: Design, template: Template,
         f.write(document)
 
     # Compile:
-    cmd = [latex_cmd,"-jobname=letter", "--interaction=nonstopmode",
+    cmd = [latex_cmd,"-jobname=letter", "-interaction=nonstopmode",
            "-fmt="+fmt, str(tmp_in.resolve())]
     try:
         res = run(cmd, cwd=dirpath, check=True)

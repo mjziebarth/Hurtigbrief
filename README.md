@@ -39,6 +39,7 @@ subdirectory are licensed under the `LPPL-1.3c` license.
   fields in the contact area.
 - Append `.hbrief` suffix automatically in save dialog if no `.hbrief` suffix
   is given.
+- Fix `-interaction=nonstopmode` command in `do_latex`.
 
 ### [0.1.2] 2023-04-30
 #### Changes

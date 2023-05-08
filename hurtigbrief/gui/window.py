@@ -438,6 +438,10 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
             path = Path(save_letter_dialog.get_filename())
             if path.is_dir():
                 path = None
+            # Ensure that the path has the right ending:
+            if path.suffix != file_pattern_glob:
+                path = path.parent / (path.stem + "."
+                                      + file_pattern_glob.split('.')[-1])
 
         # If path exists, ask for overwrite confirmation:
         if path is not None and path.exists():

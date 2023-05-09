@@ -219,10 +219,11 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         self.signature_edit.set_sensitive(False)
         self.signature_from_sender_button = Gtk.CheckButton('from sender')
         self.signature_from_sender_button.set_active(True)
-        self.signature_from_sender_button.connect(
+        h7 = self.signature_from_sender_button.connect(
             'toggled',
             self.on_signature_from_sender_toggled
         )
+        self.gui_handlers[id(self.signature_from_sender_button)] = h7
         self.signature_from_sender = True
         layout_left.attach(self.signature_edit, 0, 6, 2, 1)
         layout_left.attach(self.signature_from_sender_button, 2, 6, 2, 1)
@@ -696,6 +697,14 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
                 self.signature_from_sender = False
                 self.signature_buffer.set_text(signature)
                 self.signature_edit.set_sensitive(True)
+        with self.signature_from_sender_button.handler_block(
+                self.gui_handlers[id(self.signature_from_sender_button)]
+        ):
+            if signature is None:
+                self.signature_from_sender_button.set_active(True)
+            else:
+                self.signature_from_sender_button.set_active(False)
+
 
         # Generate the letter:
         self.generate_letter()

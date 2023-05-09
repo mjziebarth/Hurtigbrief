@@ -32,6 +32,10 @@ The LaTeX template data files in the `hurtigbrief/latex/templates/data/`
 subdirectory are licensed under the `LPPL-1.3c` license.
 
 ## Changelog
+### [Unreleased]
+#### Changed
+- Fix missing (de-)activation of "from sender" button when loading letter.
+
 ### [0.1.3] 2023-05-08
 #### Added
 - Add option to provide custom signature that is not automatically derived

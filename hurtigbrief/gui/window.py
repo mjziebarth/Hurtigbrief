@@ -719,14 +719,14 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         ):
             self.subject_buffer.set_text(subject)
         with self.opening_buffer.handler_block(
-                self.gui_handlers[id(self.subject_buffer)]
+                self.gui_handlers[id(self.opening_buffer)]
         ):
             self.opening_buffer.set_text(opening)
         with self.body_buffer.handler_block(
                 self.gui_handlers[id(self.body_buffer)]
         ):
             self.body_buffer.set_text(body)
-        with self.body_buffer.handler_block(
+        with self.closing_buffer.handler_block(
                 self.gui_handlers[id(self.closing_buffer)]
         ):
             self.closing_buffer.set_text(closing)

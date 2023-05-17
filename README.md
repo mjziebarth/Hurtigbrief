@@ -38,6 +38,7 @@ subdirectory are licensed under the `LPPL-1.3c` license.
 
 #### Changed
 - Fix missing (de-)activation of "from sender" button when loading letter.
+- Fix the `Warning: ../glib/gobject/gsignal.c:2731: instance '...' has no handler with id '...'` errors
 
 ### [0.1.3] 2023-05-08
 #### Added

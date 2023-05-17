@@ -33,6 +33,9 @@ subdirectory are licensed under the `LPPL-1.3c` license.
 
 ## Changelog
 ### [Unreleased]
+#### Added
+- Open by default the directory/files from previous loads/saves.
+
 #### Changed
 - Fix missing (de-)activation of "from sender" button when loading letter.
 
@@ -40,7 +43,6 @@ subdirectory are licensed under the `LPPL-1.3c` license.
 #### Added
 - Add option to provide custom signature that is not automatically derived
   as the sender's name (e.g. first name only).
-- Open by default the directory/files from previous loads/saves.
 
 #### Changed
 - Fix typo that prevented loading of closing from saved `.hbrief` letters.

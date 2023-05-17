@@ -125,6 +125,11 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         self.set_titlebar(self.header_bar)
 
         # Save dialogs:
+        #
+        # The `default_load_save_dir` is the default directory that will be
+        # proposed when loading or saving of documents (.hbrief, .tex, .pdf)
+        # that are have not yet been saved.
+        self.default_load_save_dir = None
         self.letter_save_path = None
         self.pdf_save_path = None
 
@@ -450,7 +455,8 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
 
 
     def select_save_path(self, which: str, file_pattern_name: str,
-                         file_pattern_glob: str) -> Optional[Path]:
+                         file_pattern_glob: str,
+                         suggest_folder: Optional[str]) -> Optional[Path]:
         """
         This method will run a dialog to select the save path, and
         return it on success.
@@ -466,10 +472,17 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
             Gtk.STOCK_SAVE,
             Gtk.ResponseType.OK,
         )
+        # File filter according to the 'glob' pattern:
         file_filter = Gtk.FileFilter()
         file_filter.set_name(file_pattern_name)
         file_filter.add_pattern(file_pattern_glob)
         save_letter_dialog.add_filter(file_filter)
+
+        # Set a default folder if proposed:
+        if suggest_folder is not None:
+            save_letter_dialog.set_current_folder(suggest_folder)
+
+        # Run the dialog:
         status = save_letter_dialog.run()
         path = None
         if status == Gtk.ResponseType.OK:
@@ -481,10 +494,17 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
                 path = path.parent / (path.stem + "."
                                       + file_pattern_glob.split('.')[-1])
 
+        # Cleanup:
+        save_letter_dialog.destroy()
+
+        # Early exit if nothing selected:
+        if path is None:
+            return None
+
         # If path exists, ask for overwrite confirmation:
-        if path is not None and path.exists():
+        if path.exists():
             confirm_dialog = Gtk.MessageDialog(
-                transient_for=save_letter_dialog,
+                transient_for=self,
                 flags=0,
                 message_type=Gtk.MessageType.WARNING,
                 buttons=Gtk.ButtonsType.OK_CANCEL,
@@ -500,7 +520,9 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
                 path = None
             confirm_dialog.destroy()
 
-        save_letter_dialog.destroy()
+        # Remember the path:
+        self.default_load_save_dir = str(path.parent.resolve())
+
         return path
 
 
@@ -512,7 +534,8 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         if self.letter_save_path is None:
             self.letter_save_path \
                = self.select_save_path("letter", "Hurtigbrief files",
-                                       "*.hbrief")
+                                       "*.hbrief",
+                                       self.default_load_save_dir)
 
         # If that failed, do not save.
         if self.letter_save_path is None:
@@ -535,7 +558,8 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
             self.log_error(e)
 
 
-    def select_letter_load_path(self) -> Optional[Path]:
+    def select_letter_load_path(self,
+                                start_folder: Optional[str]) -> Optional[Path]:
         """
         This method will run a dialog to select the load path, and
         return it on success.
@@ -555,12 +579,22 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         file_filter.set_name("Hurtigbrief files")
         file_filter.add_pattern("*.hbrief")
         load_letter_dialog.add_filter(file_filter)
+
+        # Set a default folder if proposed:
+        if start_folder is not None:
+            load_letter_dialog.set_current_folder(start_folder)
+
+        # Run the dialog:
         status = load_letter_dialog.run()
         path = None
         if status == Gtk.ResponseType.OK:
             path = Path(load_letter_dialog.get_filename())
             if not path.is_file():
                 path = None
+
+        # Remember the path:
+        if path is not None:
+            self.default_load_save_dir = str(path.parent.resolve())
 
         load_letter_dialog.destroy()
         return path
@@ -571,7 +605,8 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         This slot is called when the letter load button is clicked.
         """
         # Select the letter to load:
-        letter_load_path = self.select_letter_load_path()
+        letter_load_path \
+           = self.select_letter_load_path(self.default_load_save_dir)
 
         # If that failed, do not save.
         if letter_load_path is None:
@@ -705,7 +740,6 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
             else:
                 self.signature_from_sender_button.set_active(False)
 
-
         # Generate the letter:
         self.generate_letter()
 
@@ -716,8 +750,9 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         """
         # Make sure that a letter has been selected:
         if self.pdf_save_path is None:
-            self.pdf_save_path = self.select_save_path("PDF", "PDF files",
-                                                       "*.pdf")
+            self.pdf_save_path \
+               = self.select_save_path("PDF", "PDF files", "*.pdf",
+                                       self.default_load_save_dir)
 
         # If that failed, do not save.
         if self.pdf_save_path is None:
@@ -736,9 +771,9 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         """
         # Make sure that a letter has been selected:
         if self.tex_save_path is None:
-            self.tex_save_path = self.select_save_path("Latex document",
-                                                        "TEX files",
-                                                        "*.tex")
+            self.tex_save_path \
+               = self.select_save_path("Latex document", "TEX files",
+                                       "*.tex", self.default_load_save_dir)
 
         # If that failed, do not save.
         if self.tex_save_path is None:

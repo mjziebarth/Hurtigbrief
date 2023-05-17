@@ -131,6 +131,7 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         # that are have not yet been saved.
         self.default_load_save_dir = None
         self.letter_save_path = None
+        self.letter_load_path = None
         self.pdf_save_path = None
 
 
@@ -456,7 +457,8 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
 
     def select_save_path(self, which: str, file_pattern_name: str,
                          file_pattern_glob: str,
-                         suggest_folder: Optional[str]) -> Optional[Path]:
+                         suggest_folder: Optional[str],
+                         suggest_name: Optional[str]) -> Optional[Path]:
         """
         This method will run a dialog to select the save path, and
         return it on success.
@@ -478,9 +480,11 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         file_filter.add_pattern(file_pattern_glob)
         save_letter_dialog.add_filter(file_filter)
 
-        # Set a default folder if proposed:
+        # Set a default folder and/or file name if proposed:
         if suggest_folder is not None:
             save_letter_dialog.set_current_folder(suggest_folder)
+        if suggest_name is not None:
+            save_letter_dialog.set_current_name(suggest_name)
 
         # Run the dialog:
         status = save_letter_dialog.run()
@@ -532,10 +536,15 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         """
         # Make sure that a letter has been selected:
         if self.letter_save_path is None:
+            # Propose the file name if the letter is loaded:
+            suggest_name = None
+            if self.letter_load_path is not None:
+                suggest_name = Path(self.letter_load_path).stem + ".hbrief"
             self.letter_save_path \
                = self.select_save_path("letter", "Hurtigbrief files",
                                        "*.hbrief",
-                                       self.default_load_save_dir)
+                                       self.default_load_save_dir,
+                                       suggest_name)
 
         # If that failed, do not save.
         if self.letter_save_path is None:
@@ -594,6 +603,7 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
 
         # Remember the path:
         if path is not None:
+            self.letter_load_path = str(path.resolve)
             self.default_load_save_dir = str(path.parent.resolve())
 
         load_letter_dialog.destroy()
@@ -748,11 +758,20 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         """
         Saves the PDF, potentially opening a save path dialog before.
         """
-        # Make sure that a letter has been selected:
+        # Make sure that a PDF file has been selected:
         if self.pdf_save_path is None:
+            # If we have a letter file to save to, propose a PDF file
+            # of the same name in the same directory (similar to how
+            # latex behaves):
+            suggest_name = None
+            if self.letter_save_path is not None:
+                suggest_name = Path(self.letter_save_path).stem + ".pdf"
+
+            # Obtain path:
             self.pdf_save_path \
                = self.select_save_path("PDF", "PDF files", "*.pdf",
-                                       self.default_load_save_dir)
+                                       self.default_load_save_dir,
+                                       suggest_name)
 
         # If that failed, do not save.
         if self.pdf_save_path is None:
@@ -769,11 +788,19 @@ class HurtigbriefWindow(Gtk.ApplicationWindow):
         """
         Saves the TEX, potentially opening a save path dialog before.
         """
-        # Make sure that a letter has been selected:
+        # Make sure that a tex file has been selected:
         if self.tex_save_path is None:
+            # If we have a letter file to save to, propose a TEX file
+            # of the same name in the same directory (similar to how
+            # latex behaves):
+            suggest_name = None
+            if self.letter_save_path is not None:
+                suggest_name = Path(self.letter_save_path).stem + ".tex"
+
             self.tex_save_path \
                = self.select_save_path("Latex document", "TEX files",
-                                       "*.tex", self.default_load_save_dir)
+                                       "*.tex", self.default_load_save_dir,
+                                       suggest_name)
 
         # If that failed, do not save.
         if self.tex_save_path is None:
